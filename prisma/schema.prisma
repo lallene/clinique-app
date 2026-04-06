@@ -1,0 +1,227 @@
+generator client {
+  provider      = "prisma-client-js"
+  engineType    = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Utilisateur {
+  id_user        Int              @id @default(autoincrement())
+  login          String           @unique
+  mot_de_passe   String
+  nom            String?
+  prenom         String?
+  role           String           // administrateur, medecin, infirmier, caisse, direction
+  actif          Boolean          @default(true)
+
+  consultations      Consultation[]
+  factures           Facture[]
+  logs               LogAudit[]
+  hospitalisations   Hospitalisation[] @relation("MedecinHospitalisation")
+  rendezvous         RendezVous[]      @relation("MedecinRendezVous")   // 👈 ajouté pour la relation inverse
+}
+
+
+model Service {
+  id_service  Int      @id @default(autoincrement())
+  nom_service String
+  type_service String?
+  consultations Consultation[]
+  rendezvous  RendezVous[]
+}
+
+model Assurance {
+  id_assurance     Int       @id @default(autoincrement())
+  nom              String    @unique
+  convention       String?
+  taux_couverture  Float?    @default(0)
+  contact          String?
+  patients         Patient[]
+  factures         Facture[]
+}
+
+model Patient {
+  id_patient      Int              @id @default(autoincrement())
+  code_patient    String?          @unique
+  nom             String
+  prenom          String?
+  sexe            String?
+  dateNaissance   DateTime?
+  telephone       String?
+  adresse         String?
+  personne_contact String?
+  emploi          String?
+  numero_dossier  String?
+  assurance_id    Int?
+  assurance       Assurance?       @relation(fields: [assurance_id], references: [id_assurance])
+  consultations   Consultation[]
+  hospitalisations Hospitalisation[]
+  factures        Facture[]
+  examens         Examen[]
+  rendezvous      RendezVous[]
+  mouvementsPharmacie MvtPharmacie[]
+}
+
+model Consultation {
+  id_consultation Int       @id @default(autoincrement())
+  date_consultation DateTime @default(now())
+  motif           String?
+  antecedents     String?
+  constantes      String?
+  diagnostic      String?
+  prescription    String?
+  compte_rendu    String?
+  patient_id      Int
+  patient         Patient     @relation(fields: [patient_id], references: [id_patient])
+  medecin_id      Int?
+  medecin         Utilisateur? @relation(fields: [medecin_id], references: [id_user])
+  service_id      Int?
+  service         Service?     @relation(fields: [service_id], references: [id_service])
+
+  examens Examen[] @relation("ConsultationExamens")  // <— le lien inverse ajouté
+}
+
+
+model Hospitalisation {
+  id_hospit        Int       @id @default(autoincrement())
+  patient_id       Int
+  patient          Patient   @relation(fields: [patient_id], references: [id_patient])
+  date_entree      DateTime  @default(now())
+  date_sortie      DateTime?
+  diagnostic_entree String?
+  medecin_responsable Int?
+  medecin          Utilisateur? @relation("MedecinHospitalisation", fields: [medecin_responsable], references: [id_user])
+  chambre          String?
+  lit              String?
+  statut           String?   @default("en_cours")
+  mouvementsPharmacie MvtPharmacie[]
+}
+
+
+model Examen {
+  id_examen        Int       @id @default(autoincrement())
+  patient_id       Int
+  patient          Patient   @relation(fields: [patient_id], references: [id_patient])
+  consultation_id  Int?
+  consultation     Consultation? @relation("ConsultationExamens", fields: [consultation_id], references: [id_consultation])
+  type_examen      String
+  resultat         String?
+  statut           String?   @default("demande")
+  date_demande     DateTime  @default(now())
+  date_realisation DateTime?
+  date_validation  DateTime?
+}
+
+
+model Facture {
+  id_facture        Int       @id @default(autoincrement())
+  numero_facture    String    @unique
+  date_facture      DateTime  @default(now())
+  montant_total     Float
+  montant_patient   Float?
+  montant_assurance Float?
+  statut            String?   @default("brouillon")
+  patient_id        Int
+  patient           Patient    @relation(fields: [patient_id], references: [id_patient])
+  assurance_id      Int?
+  assurance         Assurance? @relation(fields: [assurance_id], references: [id_assurance])
+  cree_par          Int?
+  utilisateur       Utilisateur? @relation(fields: [cree_par], references: [id_user])
+  paiements         Paiement[]
+}
+
+model Paiement {
+  id_paiement   Int      @id @default(autoincrement())
+  date_paiement DateTime @default(now())
+  montant       Float
+  mode_paiement String?
+  facture_id    Int
+  facture       Facture  @relation(fields: [facture_id], references: [id_facture])
+}
+
+model ProduitPharmacie {
+  id_produit    Int     @id @default(autoincrement())
+  code_produit  String? @unique
+  nom_produit   String
+  forme         String?
+  prix_achat    Float
+  prix_vente    Float
+  quantite_stock Int    @default(0)
+  mvtPharmacie  MvtPharmacie[]
+}
+
+model MvtPharmacie {
+  id_mvt     Int        @id @default(autoincrement())
+  produit_id Int
+  produit    ProduitPharmacie @relation(fields: [produit_id], references: [id_produit])
+  patient_id Int?
+  patient    Patient?   @relation(fields: [patient_id], references: [id_patient])
+  hospit_id  Int?
+  hospitalisation Hospitalisation? @relation(fields: [hospit_id], references: [id_hospit])
+  type_mvt   String     // ENTREE, SORTIE, AJUSTEMENT
+  qte        Float
+  date_mvt   DateTime  @default(now())
+}
+
+model RendezVous {
+  id_rdv     Int       @id @default(autoincrement())
+  patient_id Int
+  patient    Patient   @relation(fields: [patient_id], references: [id_patient])
+  medecin_id Int?
+  medecin    Utilisateur? @relation("MedecinRendezVous", fields: [medecin_id], references: [id_user])
+  service_id Int?
+  service    Service?  @relation(fields: [service_id], references: [id_service])
+  date_rdv   DateTime
+  statut     String?   @default("planifie")
+}
+
+
+model LogAudit {
+  id_log        Int      @id @default(autoincrement())
+  date_action   DateTime @default(now())
+  utilisateur_id Int?
+  utilisateur   Utilisateur? @relation(fields: [utilisateur_id], references: [id_user])
+  table_impactee String
+  type_action    String
+  details        String?
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?   // Pour l'auth classique (Login/Password)
+  image         String?
+  role          String    @default("USER") // "ADMIN", "DOCTOR", "RECEPTIONIST"
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
