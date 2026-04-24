@@ -1,13 +1,13 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-import AppHeader from "@/components/app-header";
-import PatientsPageClient from "@/components/patients/patients-page-client";
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import AppHeader from '@/components/app-header';
+import PatientsPageClient from '@/components/patients/patients-page-client';
 
 export default async function PatientsPage() {
   const session = await auth();
 
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   return (

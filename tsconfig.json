@@ -7,17 +7,19 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+
+    "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
+
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+
+    "plugins": [{ "name": "next" }],
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

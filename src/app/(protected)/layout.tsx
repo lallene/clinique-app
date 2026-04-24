@@ -1,6 +1,6 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-import AppSidebar from "@/components/app-sidebar";
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import AppSidebar from '@/components/app-sidebar';
 
 export default async function ProtectedLayout({
   children,
@@ -10,14 +10,14 @@ export default async function ProtectedLayout({
   const session = await auth();
 
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/60">
-      <div className="flex min-h-screen">
+    <div className="min-h-screen w-full bg-gray-50/60">
+      <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+        <main className="flex min-w-0 flex-1 flex-col w-full">{children}</main>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   return NextResponse.json(
@@ -8,15 +8,13 @@ export async function GET() {
         patient: true,
         medecin: true,
       },
-    })
+    }),
   );
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
-  return NextResponse.json(
-    await prisma.hospitalisation.create({ data: body })
-  );
+  return NextResponse.json(await prisma.hospitalisation.create({ data: body }));
 }
 
 export async function PUT(req: Request) {
@@ -25,7 +23,7 @@ export async function PUT(req: Request) {
     await prisma.hospitalisation.update({
       where: { id_hospit: body.id_hospit },
       data: body,
-    })
+    }),
   );
 }
 
@@ -36,5 +34,5 @@ export async function DELETE(req: Request) {
     where: { id_hospit: id },
   });
 
-  return NextResponse.json({ message: "Supprimé" });
+  return NextResponse.json({ message: 'Supprimé' });
 }

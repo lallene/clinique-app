@@ -5,196 +5,243 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // L'URL est gérée dans prisma.config.ts en Prisma 7
 }
 
 model Utilisateur {
-  id_user        Int              @id @default(autoincrement())
-  login          String           @unique
-  mot_de_passe   String
-  nom            String?
-  prenom         String?
-  role           String           // administrateur, medecin, infirmier, caisse, direction
-  actif          Boolean          @default(true)
+  idUser        Int              @id @default(autoincrement()) @map("id_user")
+  login         String           @unique
+  motDePasse    String           @map("mot_de_passe")
+  nom           String?
+  prenom        String?
+  role          String           // administrateur, medecin, infirmier, caisse, direction
+  actif         Boolean          @default(true)
 
   consultations      Consultation[]
   factures           Facture[]
   logs               LogAudit[]
   hospitalisations   Hospitalisation[] @relation("MedecinHospitalisation")
-  rendezvous         RendezVous[]      @relation("MedecinRendezVous")   // 👈 ajouté pour la relation inverse
+  rendezvous         RendezVous[]      @relation("MedecinRendezVous")
+
+  @@map("utilisateur")
 }
 
+model CompagnieAssurance {
+  idCompagnie    Int         @id @default(autoincrement()) @map("id_compagnie")
+  nomCompagnie   String      @unique @map("nom_compagnie") // ex: ASCOMA, MUGEF-CI, NSIA
+  assurances     Assurance[]
 
-model Service {
-  id_service  Int      @id @default(autoincrement())
-  nom_service String
-  type_service String?
-  consultations Consultation[]
-  rendezvous  RendezVous[]
+  @@map("compagnie_assurance")
 }
 
 model Assurance {
-  id_assurance     Int       @id @default(autoincrement())
-  nom              String    @unique
-  convention       String?
-  taux_couverture  Float?    @default(0)
-  contact          String?
-  patients         Patient[]
-  factures         Facture[]
+  idAssurance    Int                @id @default(autoincrement()) @map("id_assurance")
+  compagnieId    Int                @map("compagnie_id")
+  compagnie      CompagnieAssurance @relation(fields: [compagnieId], references: [idCompagnie])
+  
+  nomGarant      String             @map("nom_garant") // ex: CONCENTRIX, PORTEO, TOTAL
+  contact        String?
+  convention     String?   
+  
+  patients       Patient[]
+  factures       Facture[]
+
+  @@map("assurance")
 }
 
 model Patient {
-  id_patient      Int              @id @default(autoincrement())
-  code_patient    String?          @unique
+  id_patient       Int              @id @default(autoincrement()) @map("id_patient")
+  codePatient     String?           @unique @map("code_patient")
   nom             String
-  prenom          String?
-  sexe            String?
-  dateNaissance   DateTime?
-  telephone       String?
-  adresse         String?
-  personne_contact String?
-  emploi          String?
-  numero_dossier  String?
-  assurance_id    Int?
-  assurance       Assurance?       @relation(fields: [assurance_id], references: [id_assurance])
-  consultations   Consultation[]
+  prenoms         String?          
+  sexe            String?          
+  dateNaissance   DateTime?        @map("date_naissance")
+  age             Int?             
+  telephone       String?          
+  quartier        String?          
+  personneContact String?          @map("personne_contact")
+  numeroDossier   String?          @unique @map("numero_dossier")
+
+  // Volet Assurance
+  isAssure        Boolean          @default(false) @map("is_assure")
+  tauxCouverture  Float?           @default(0) @map("taux_couverture")
+  matriculeAssure String?          @map("matricule_assure")
+  
+  assuranceId     Int?             @map("assurance_id")
+  assurance       Assurance?       @relation(fields: [assuranceId], references: [idAssurance])
+
+  consultations    Consultation[]
   hospitalisations Hospitalisation[]
-  factures        Facture[]
-  examens         Examen[]
-  rendezvous      RendezVous[]
+  factures         Facture[]
+  examens          Examen[]
+  rendezvous       RendezVous[]
   mouvementsPharmacie MvtPharmacie[]
+
+  @@map("patient")
 }
 
 model Consultation {
-  id_consultation Int       @id @default(autoincrement())
-  date_consultation DateTime @default(now())
+  idConsultation Int       @id @default(autoincrement()) @map("id_consultation")
+  dateConsultation DateTime @default(now()) @map("date_consultation")
   motif           String?
   antecedents     String?
   constantes      String?
   diagnostic      String?
   prescription    String?
-  compte_rendu    String?
-  patient_id      Int
-  patient         Patient     @relation(fields: [patient_id], references: [id_patient])
-  medecin_id      Int?
-  medecin         Utilisateur? @relation(fields: [medecin_id], references: [id_user])
-  service_id      Int?
-  service         Service?     @relation(fields: [service_id], references: [id_service])
+  compteRendu     String?  @map("compte_rendu")
+  
+  patientId       Int      @map("patient_id")
+  patient         Patient  @relation(fields: [patientId], references: [id_patient])
+  
+  medecinId       Int?     @map("medecin_id")
+  medecin         Utilisateur? @relation(fields: [medecinId], references: [idUser])
+  
+  serviceId       Int?     @map("service_id")
+  service         Service?     @relation(fields: [serviceId], references: [idService])
 
-  examens Examen[] @relation("ConsultationExamens")  // <— le lien inverse ajouté
+  examens Examen[] @relation("ConsultationExamens")
+
+  @@map("consultation")
 }
 
+model Service {
+  idService   Int      @id @default(autoincrement()) @map("id_service")
+  nomService  String   @map("nom_service")
+  typeService String?  @map("type_service")
+  consultations Consultation[]
+  rendezvous  RendezVous[]
+
+  @@map("service")
+}
 
 model Hospitalisation {
-  id_hospit        Int       @id @default(autoincrement())
-  patient_id       Int
-  patient          Patient   @relation(fields: [patient_id], references: [id_patient])
-  date_entree      DateTime  @default(now())
-  date_sortie      DateTime?
-  diagnostic_entree String?
-  medecin_responsable Int?
-  medecin          Utilisateur? @relation("MedecinHospitalisation", fields: [medecin_responsable], references: [id_user])
+  idHospit         Int       @id @default(autoincrement()) @map("id_hospit")
+  patientId        Int       @map("patient_id")
+  patient          Patient   @relation(fields: [patientId], references: [id_patient])
+  dateEntree       DateTime  @default(now()) @map("date_entree")
+  dateSortie       DateTime? @map("date_sortie")
+  diagnosticEntree String?   @map("diagnostic_entree")
+  medecinResponsable Int?    @map("medecin_responsable")
+  medecin          Utilisateur? @relation("MedecinHospitalisation", fields: [medecinResponsable], references: [idUser])
   chambre          String?
   lit              String?
   statut           String?   @default("en_cours")
   mouvementsPharmacie MvtPharmacie[]
-}
 
+  @@map("hospitalisation")
+}
 
 model Examen {
-  id_examen        Int       @id @default(autoincrement())
-  patient_id       Int
-  patient          Patient   @relation(fields: [patient_id], references: [id_patient])
-  consultation_id  Int?
-  consultation     Consultation? @relation("ConsultationExamens", fields: [consultation_id], references: [id_consultation])
-  type_examen      String
-  resultat         String?
-  statut           String?   @default("demande")
-  date_demande     DateTime  @default(now())
-  date_realisation DateTime?
-  date_validation  DateTime?
+  idExamen        Int       @id @default(autoincrement()) @map("id_examen")
+  patientId       Int       @map("patient_id")
+  patient         Patient   @relation(fields: [patientId], references: [id_patient])
+  consultationId  Int?      @map("consultation_id")
+  consultation    Consultation? @relation("ConsultationExamens", fields: [consultationId], references: [idConsultation])
+  typeExamen      String    @map("type_examen")
+  resultat        String?
+  statut          String?   @default("demande")
+  dateDemande     DateTime  @default(now()) @map("date_demande")
+  dateRealisation DateTime? @map("date_realisation")
+  dateValidation  DateTime? @map("date_validation")
+
+  @@map("examen")
 }
 
-
 model Facture {
-  id_facture        Int       @id @default(autoincrement())
-  numero_facture    String    @unique
-  date_facture      DateTime  @default(now())
-  montant_total     Float
-  montant_patient   Float?
-  montant_assurance Float?
-  statut            String?   @default("brouillon")
-  patient_id        Int
-  patient           Patient    @relation(fields: [patient_id], references: [id_patient])
-  assurance_id      Int?
-  assurance         Assurance? @relation(fields: [assurance_id], references: [id_assurance])
-  cree_par          Int?
-  utilisateur       Utilisateur? @relation(fields: [cree_par], references: [id_user])
-  paiements         Paiement[]
+  idFacture        Int       @id @default(autoincrement()) @map("id_facture")
+  numeroFacture    String    @unique @map("numero_facture")
+  dateFacture      DateTime  @default(now()) @map("date_facture")
+  montantTotal     Float     @map("montant_total")
+  montantPatient   Float?    @map("montant_patient")
+  montantAssurance Float?    @map("montant_assurance")
+  statut           String?   @default("brouillon")
+  
+  patientId        Int       @map("patient_id")
+  patient          Patient   @relation(fields: [patientId], references: [id_patient])
+  
+  assuranceId      Int?      @map("assurance_id")
+  assurance        Assurance? @relation(fields: [assuranceId], references: [idAssurance])
+  
+  creePar          Int?      @map("cree_par")
+  utilisateur      Utilisateur? @relation(fields: [creePar], references: [idUser])
+  paiements        Paiement[]
+
+  @@map("facture")
 }
 
 model Paiement {
-  id_paiement   Int      @id @default(autoincrement())
-  date_paiement DateTime @default(now())
+  idPaiement    Int      @id @default(autoincrement()) @map("id_paiement")
+  datePaiement  DateTime @default(now()) @map("date_paiement")
   montant       Float
-  mode_paiement String?
-  facture_id    Int
-  facture       Facture  @relation(fields: [facture_id], references: [id_facture])
+  modePaiement  String?  @map("mode_paiement")
+  factureId     Int      @map("facture_id")
+  facture       Facture  @relation(fields: [factureId], references: [idFacture])
+
+  @@map("paiement")
 }
 
 model ProduitPharmacie {
-  id_produit    Int     @id @default(autoincrement())
-  code_produit  String? @unique
-  nom_produit   String
+  idProduit     Int     @id @default(autoincrement()) @map("id_produit")
+  codeProduit   String? @unique @map("code_produit")
+  nomProduit    String  @map("nom_produit")
   forme         String?
-  prix_achat    Float
-  prix_vente    Float
-  quantite_stock Int    @default(0)
+  prixAchat     Float   @map("prix_achat")
+  prixVente     Float   @map("prix_vente")
+  quantiteStock Int     @default(0) @map("quantite_stock")
   mvtPharmacie  MvtPharmacie[]
+
+  @@map("produit_pharmacie")
 }
 
 model MvtPharmacie {
-  id_mvt     Int        @id @default(autoincrement())
-  produit_id Int
-  produit    ProduitPharmacie @relation(fields: [produit_id], references: [id_produit])
-  patient_id Int?
-  patient    Patient?   @relation(fields: [patient_id], references: [id_patient])
-  hospit_id  Int?
-  hospitalisation Hospitalisation? @relation(fields: [hospit_id], references: [id_hospit])
-  type_mvt   String     // ENTREE, SORTIE, AJUSTEMENT
+  idMvt      Int        @id @default(autoincrement()) @map("id_mvt")
+  produitId  Int        @map("produit_id")
+  produit    ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
+  patientId  Int?       @map("patient_id")
+  patient    Patient?   @relation(fields: [patientId], references: [id_patient])
+  hospitId   Int?       @map("hospit_id")
+  hospitalisation Hospitalisation? @relation(fields: [hospitId], references: [idHospit])
+  typeMvt    String     @map("type_mvt") // ENTREE, SORTIE
   qte        Float
-  date_mvt   DateTime  @default(now())
+  dateMvt    DateTime  @default(now()) @map("date_mvt")
+
+  @@map("mouvement_pharmacie")
 }
 
 model RendezVous {
-  id_rdv     Int       @id @default(autoincrement())
-  patient_id Int
-  patient    Patient   @relation(fields: [patient_id], references: [id_patient])
-  medecin_id Int?
-  medecin    Utilisateur? @relation("MedecinRendezVous", fields: [medecin_id], references: [id_user])
-  service_id Int?
-  service    Service?  @relation(fields: [service_id], references: [id_service])
-  date_rdv   DateTime
+  idRdv      Int       @id @default(autoincrement()) @map("id_rdv")
+  patientId  Int       @map("patient_id")
+  patient    Patient   @relation(fields: [patientId], references: [id_patient])
+  medecinId  Int?      @map("medecin_id")
+  medecin    Utilisateur? @relation("MedecinRendezVous", fields: [medecinId], references: [idUser])
+  serviceId  Int?      @map("service_id")
+  service    Service?  @relation(fields: [serviceId], references: [idService])
+  dateRdv    DateTime  @map("date_rdv")
   statut     String?   @default("planifie")
-}
 
+  @@map("rendez_vous")
+}
 
 model LogAudit {
-  id_log        Int      @id @default(autoincrement())
-  date_action   DateTime @default(now())
-  utilisateur_id Int?
-  utilisateur   Utilisateur? @relation(fields: [utilisateur_id], references: [id_user])
-  table_impactee String
-  type_action    String
-  details        String?
+  idLog         Int      @id @default(autoincrement()) @map("id_log")
+  dateAction    DateTime @default(now()) @map("date_action")
+  utilisateurId Int?     @map("utilisateur_id")
+  utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [idUser])
+  tableImpactee String   @map("table_impactee")
+  typeAction    String   @map("type_action")
+  details       String?
+
+  @@map("log_audit")
 }
 
+// Modèles pour NextAuth (Optionnels si tu utilises Utilisateur pour tout)
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  password      String?   // Pour l'auth classique (Login/Password)
+  password      String?
   image         String?
-  role          String    @default("USER") // "ADMIN", "DOCTOR", "RECEPTIONIST"
+  role          String    @default("USER")
   accounts      Account[]
   sessions      Session[]
 }
@@ -212,9 +259,7 @@ model Account {
   scope              String?
   id_token           String?  @db.Text
   session_state      String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 

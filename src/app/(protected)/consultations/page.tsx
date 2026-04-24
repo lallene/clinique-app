@@ -1,12 +1,12 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-import AppHeader from "@/components/app-header";
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import AppHeader from '@/components/app-header';
 
 export default async function ConsultationsPage() {
   const session = await auth();
 
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   return (

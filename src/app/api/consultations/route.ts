@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const data = await prisma.consultation.findMany({
@@ -42,5 +42,5 @@ export async function DELETE(req: Request) {
     where: { id_consultation: id },
   });
 
-  return NextResponse.json({ message: "Consultation supprimée" });
+  return NextResponse.json({ message: 'Consultation supprimée' });
 }

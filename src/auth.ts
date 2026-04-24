@@ -1,17 +1,17 @@
-import NextAuth, { type DefaultSession } from "next-auth";
-import { type JWT } from "next-auth/jwt";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
+import NextAuth, { type DefaultSession } from 'next-auth';
+import { type JWT } from 'next-auth/jwt';
+import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 
-import authConfig from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import authConfig from '@/auth.config';
+import { prisma } from '@/lib/prisma';
 
-declare module "next-auth" {
+declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
       role: string;
-    } & DefaultSession["user"];
+    } & DefaultSession['user'];
   }
 
   interface User {
@@ -20,7 +20,7 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
+declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
     role?: string;
@@ -29,12 +29,12 @@ declare module "next-auth/jwt" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Login", type: "text" },
-        password: { label: "Mot de passe", type: "password" },
+        email: { label: 'Login', type: 'text' },
+        password: { label: 'Mot de passe', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -51,7 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
-          user.mot_de_passe
+          user.mot_de_passe,
         );
 
         if (!isPasswordValid) {
@@ -60,7 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         return {
           id: String(user.id_user),
-          name: `${user.prenom ?? ""} ${user.nom ?? ""}`.trim() || user.login,
+          name: `${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.login,
           email: user.login,
           role: user.role,
         };
@@ -78,8 +78,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = String(token.id ?? "");
-        session.user.role = String(token.role ?? "USER");
+        session.user.id = String(token.id ?? '');
+        session.user.role = String(token.role ?? 'USER');
       }
       return session;
     },

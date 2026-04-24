@@ -1,22 +1,19 @@
-"use server";
+'use server';
 
-import { signIn } from "@/auth"; // Importe depuis votre src/auth.ts
-import { AuthError } from "next-auth";
+import { signIn } from '@/auth'; // Importe depuis votre src/auth.ts
+import { AuthError } from 'next-auth';
 
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData
-) {
+export async function authenticate(prevState: string | undefined, formData: FormData) {
   try {
     // On passe directement le formData au fournisseur credentials
-    await signIn("credentials", formData);
+    await signIn('credentials', formData);
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
-        case "CredentialsSignin":
-          return "Identifiants invalides.";
+        case 'CredentialsSignin':
+          return 'Identifiants invalides.';
         default:
-          return "Une erreur est survenue lors de la connexion.";
+          return 'Une erreur est survenue lors de la connexion.';
       }
     }
     // IMPORTANT : Next.js utilise des erreurs pour gérer les redirections.

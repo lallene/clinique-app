@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   return NextResponse.json(
@@ -9,7 +9,7 @@ export async function GET() {
         assurance: true,
         paiements: true,
       },
-    })
+    }),
   );
 }
 
@@ -30,7 +30,7 @@ export async function PUT(req: Request) {
     await prisma.facture.update({
       where: { id_facture: body.id_facture },
       data: body,
-    })
+    }),
   );
 }
 
@@ -41,5 +41,5 @@ export async function DELETE(req: Request) {
     where: { id_facture: id },
   });
 
-  return NextResponse.json({ message: "Facture supprimée" });
+  return NextResponse.json({ message: 'Facture supprimée' });
 }

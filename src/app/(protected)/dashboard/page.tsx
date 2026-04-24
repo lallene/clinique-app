@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-import AppHeader from "@/components/app-header";
+import Link from 'next/link';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import AppHeader from '@/components/app-header';
 import {
   Users,
   Stethoscope,
@@ -14,79 +14,79 @@ import {
   ChevronRight,
   UserRound,
   LayoutDashboard,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default async function DashboardPage() {
   const session = await auth();
 
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   const stats = [
-    { label: "Patients", value: "1 284", icon: Users, trend: "+2.5%" },
-    { label: "Consultations", value: "24", icon: Stethoscope, trend: "Aujourd’hui" },
-    { label: "Rendez-vous", value: "12", icon: Calendar, trend: "À venir" },
-    { label: "Revenus", value: "1 450 €", icon: CreditCard, trend: "+12%" },
+    { label: 'Patients', value: '1 284', icon: Users, trend: '+2.5%' },
+    { label: 'Consultations', value: '24', icon: Stethoscope, trend: 'Aujourd’hui' },
+    { label: 'Rendez-vous', value: '12', icon: Calendar, trend: 'À venir' },
+    { label: 'Revenus', value: '1 450 €', icon: CreditCard, trend: '+12%' },
   ];
 
   const appointments = [
-    { time: "08:30", patient: "Awa Koné", doctor: "Dr. Kouassi", type: "Consultation" },
-    { time: "09:15", patient: "Jean Dupont", doctor: "Dr. Yao", type: "Contrôle" },
-    { time: "10:00", patient: "Mariam Traoré", doctor: "Dr. Kouassi", type: "Suivi" },
-    { time: "11:20", patient: "Paul Martin", doctor: "Dr. N’Guessan", type: "Première visite" },
+    { time: '08:30', patient: 'Awa Koné', doctor: 'Dr. Kouassi', type: 'Consultation' },
+    { time: '09:15', patient: 'Jean Dupont', doctor: 'Dr. Yao', type: 'Contrôle' },
+    { time: '10:00', patient: 'Mariam Traoré', doctor: 'Dr. Kouassi', type: 'Suivi' },
+    { time: '11:20', patient: 'Paul Martin', doctor: 'Dr. N’Guessan', type: 'Première visite' },
   ];
 
   const activities = [
     {
-      title: "Nouvelle consultation enregistrée",
-      description: "Patient : Awa Koné · Service : Médecine générale",
-      time: "Il y a 10 min",
+      title: 'Nouvelle consultation enregistrée',
+      description: 'Patient : Awa Koné · Service : Médecine générale',
+      time: 'Il y a 10 min',
       icon: Stethoscope,
     },
     {
-      title: "Paiement validé",
-      description: "Facture N° FAC-2026-00124 · 45 €",
-      time: "Il y a 25 min",
+      title: 'Paiement validé',
+      description: 'Facture N° FAC-2026-00124 · 45 €',
+      time: 'Il y a 25 min',
       icon: CreditCard,
     },
     {
-      title: "Nouveau patient ajouté",
-      description: "Dossier créé pour Jean Dupont",
-      time: "Il y a 40 min",
+      title: 'Nouveau patient ajouté',
+      description: 'Dossier créé pour Jean Dupont',
+      time: 'Il y a 40 min',
       icon: Users,
     },
     {
-      title: "Prescription pharmacie préparée",
-      description: "Commande interne prête pour hospitalisation",
-      time: "Il y a 1 h",
+      title: 'Prescription pharmacie préparée',
+      description: 'Commande interne prête pour hospitalisation',
+      time: 'Il y a 1 h',
       icon: Pill,
     },
   ];
 
   const quickActions = [
     {
-      title: "Nouveau patient",
-      description: "Créer rapidement un dossier patient",
-      href: "/patients",
+      title: 'Nouveau patient',
+      description: 'Créer rapidement un dossier patient',
+      href: '/patients',
       icon: UserRound,
     },
     {
-      title: "Nouvelle consultation",
-      description: "Enregistrer une consultation médicale",
-      href: "/consultations",
+      title: 'Nouvelle consultation',
+      description: 'Enregistrer une consultation médicale',
+      href: '/consultations',
       icon: Stethoscope,
     },
     {
-      title: "Planifier un rendez-vous",
-      description: "Ajouter un rendez-vous au planning",
-      href: "/rendezvous",
+      title: 'Planifier un rendez-vous',
+      description: 'Ajouter un rendez-vous au planning',
+      href: '/rendezvous',
       icon: Calendar,
     },
     {
-      title: "Créer une facture",
-      description: "Générer une nouvelle facture patient",
-      href: "/factures",
+      title: 'Créer une facture',
+      description: 'Générer une nouvelle facture patient',
+      href: '/factures',
       icon: FileText,
     },
   ];
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
     <>
       <AppHeader
         title="Tableau de bord"
-        subtitle="Vue d’ensemble de l’activité clinique"
+        subtitle="Vue d’ensemble de l’activité Clinique Médicale Saint Raphaél de Séguiéla"
         userName={session.user?.name}
         userEmail={session.user?.email}
         userRole={session.user?.role}
@@ -104,11 +104,9 @@ export default async function DashboardPage() {
       <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-              Vue d’ensemble
-            </h2>
+            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Vue d’ensemble</h2>
             <p className="mt-1 text-gray-500">
-              Bienvenue dans votre espace de gestion clinique
+              Bienvenue dans votre espace de gestion Clinique Médicale Saint Raphaél de Séguiéla
             </p>
           </div>
 
@@ -155,9 +153,7 @@ export default async function DashboardPage() {
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Activité récente</h3>
-                <p className="text-sm text-gray-500">
-                  Dernières actions dans le système
-                </p>
+                <p className="text-sm text-gray-500">Dernières actions dans le système</p>
               </div>
               <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600">
                 <Activity size={20} />
@@ -205,9 +201,7 @@ export default async function DashboardPage() {
                     <span className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">
                       {appointment.time}
                     </span>
-                    <span className="text-xs font-medium text-gray-400">
-                      {appointment.type}
-                    </span>
+                    <span className="text-xs font-medium text-gray-400">{appointment.type}</span>
                   </div>
                   <p className="font-semibold text-gray-900">{appointment.patient}</p>
                   <p className="text-sm text-gray-500">{appointment.doctor}</p>
@@ -221,9 +215,7 @@ export default async function DashboardPage() {
           <section className="lg:col-span-2 rounded-3xl border border-gray-200 bg-white p-6">
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-900">Accès rapides</h3>
-              <p className="text-sm text-gray-500">
-                Lancez vos actions principales en un clic
-              </p>
+              <p className="text-sm text-gray-500">Lancez vos actions principales en un clic</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -252,18 +244,14 @@ export default async function DashboardPage() {
           <section className="rounded-3xl border border-gray-200 bg-white p-6">
             <div className="mb-6">
               <h3 className="text-lg font-bold text-gray-900">Mon profil</h3>
-              <p className="text-sm text-gray-500">
-                Informations de la session active
-              </p>
+              <p className="text-sm text-gray-500">Informations de la session active</p>
             </div>
 
             <div className="flex flex-col items-center text-center">
               <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-100 text-2xl font-bold text-indigo-700">
-                {session.user?.name?.charAt(0) ?? "U"}
+                {session.user?.name?.charAt(0) ?? 'U'}
               </div>
-              <h4 className="text-lg font-bold text-gray-900">
-                {session.user?.name}
-              </h4>
+              <h4 className="text-lg font-bold text-gray-900">{session.user?.name}</h4>
               <p className="text-sm text-gray-500">{session.user?.email}</p>
               <span className="mt-3 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-700">
                 {session.user?.role}
@@ -283,7 +271,7 @@ export default async function DashboardPage() {
                   Accès
                 </p>
                 <p className="mt-1 font-medium text-gray-900">
-                  Tableau de bord clinique
+                  Tableau de bord Clinique Médicale Saint Raphaél de Séguiéla
                 </p>
               </div>
 
