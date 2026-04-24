@@ -28,7 +28,7 @@ export async function PUT(req: Request) {
 
   return NextResponse.json(
     await prisma.facture.update({
-      where: { id_facture: body.id_facture },
+      where: { idFacture: body.id_facture },
       data: body,
     }),
   );
@@ -38,7 +38,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
 
   await prisma.facture.delete({
-    where: { id_facture: id },
+    where: { idFacture: id },
   });
 
   return NextResponse.json({ message: 'Facture supprimée' });

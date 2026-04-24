@@ -28,7 +28,7 @@ export async function PUT(req: Request) {
   const body = await req.json();
 
   const data = await prisma.consultation.update({
-    where: { id_consultation: body.id_consultation },
+    where: { idConsultation: body.id_consultation },
     data: body,
   });
 
@@ -39,7 +39,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
 
   await prisma.consultation.delete({
-    where: { id_consultation: id },
+    where: { idConsultation: id },
   });
 
   return NextResponse.json({ message: 'Consultation supprimée' });

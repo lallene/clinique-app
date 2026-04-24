@@ -8,8 +8,8 @@
     "noEmit": true,
     "esModuleInterop": true,
 
-    "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "6.0",
+   "forceConsistentCasingInFileNames": true,
+  "ignoreDeprecations": "5.0",
 
     "module": "esnext",
     "moduleResolution": "bundler",

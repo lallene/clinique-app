@@ -21,7 +21,7 @@ export async function PUT(req: Request) {
   const body = await req.json();
   return NextResponse.json(
     await prisma.hospitalisation.update({
-      where: { id_hospit: body.id_hospit },
+      where: { idHospit: body.id_hospit },
       data: body,
     }),
   );
@@ -31,7 +31,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
 
   await prisma.hospitalisation.delete({
-    where: { id_hospit: id },
+    where: { idHospit: id },
   });
 
   return NextResponse.json({ message: 'Supprimé' });

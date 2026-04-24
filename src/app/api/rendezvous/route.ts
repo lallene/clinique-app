@@ -24,7 +24,7 @@ export async function PUT(req: Request) {
 
   return NextResponse.json(
     await prisma.rendezVous.update({
-      where: { id_rdv: body.id_rdv },
+      where: { idRdv: body.id_rdv },
       data: body,
     }),
   );
@@ -34,7 +34,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
 
   await prisma.rendezVous.delete({
-    where: { id_rdv: id },
+    where: { idRdv: id },
   });
 
   return NextResponse.json({ message: 'RDV supprimé' });

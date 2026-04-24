@@ -15,7 +15,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
 
   await prisma.paiement.delete({
-    where: { id_paiement: id },
+    where: { idPaiement: id },
   });
 
   return NextResponse.json({ message: 'Paiement supprimé' });

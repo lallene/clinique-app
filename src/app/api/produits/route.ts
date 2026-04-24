@@ -16,7 +16,7 @@ export async function PUT(req: Request) {
 
   return NextResponse.json(
     await prisma.produitPharmacie.update({
-      where: { id_produit: body.id_produit },
+      where: { idProduit: body.id_produit },
       data: body,
     }),
   );
@@ -26,7 +26,7 @@ export async function DELETE(req: Request) {
   const { id } = await req.json();
 
   await prisma.produitPharmacie.delete({
-    where: { id_produit: id },
+    where: { idProduit: id },
   });
 
   return NextResponse.json({ message: 'Produit supprimé' });

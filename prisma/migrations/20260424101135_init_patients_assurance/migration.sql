@@ -5,9 +5,9 @@
   - You are about to drop the column `taux_couverture` on the `Assurance` table. All the data in the column will be lost.
   - You are about to drop the column `adresse` on the `Patient` table. All the data in the column will be lost.
   - You are about to drop the column `prenom` on the `Patient` table. All the data in the column will be lost.
-  - A unique constraint covering the columns `[nom_garant]` on the table `Assurance` will be added. If there are existing duplicate values, this will fail.
+  - A unique constraint covering the columns `[nomGarant]` on the table `Assurance` will be added. If there are existing duplicate values, this will fail.
   - A unique constraint covering the columns `[numero_dossier]` on the table `Patient` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `nom_garant` to the `Assurance` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `nomGarant` to the `Assurance` table without a default value. This is not possible if the table is not empty.
 
 */
 -- DropIndex
@@ -16,7 +16,7 @@ DROP INDEX "Assurance_nom_key";
 -- AlterTable
 ALTER TABLE "Assurance" DROP COLUMN "nom",
 DROP COLUMN "taux_couverture",
-ADD COLUMN     "nom_garant" TEXT NOT NULL;
+ADD COLUMN     "nomGarant" TEXT NOT NULL;
 
 -- AlterTable
 ALTER TABLE "Patient" DROP COLUMN "adresse",
@@ -79,7 +79,7 @@ CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provi
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Assurance_nom_garant_key" ON "Assurance"("nom_garant");
+CREATE UNIQUE INDEX "Assurance_nom_garant_key" ON "Assurance"("nomGarant");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Patient_numero_dossier_key" ON "Patient"("numero_dossier");
