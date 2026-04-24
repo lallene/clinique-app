@@ -25,13 +25,13 @@ type Patient = {
   tauxCouverture?: number | null;
   matriculeAssure?: string | null;
   assurance?: {
-  compagnieId?: number | null;
-  nomGarant?: string | null;
-  compagnie?: {
-    idCompagnie?: number;
-    nomCompagnie?: string | null;
+    compagnieId?: number | null;
+    nomGarant?: string | null;
+    compagnie?: {
+      idCompagnie?: number;
+      nomCompagnie?: string | null;
+    } | null;
   } | null;
-} | null;
 };
 
 type PatientFormModalProps = {
@@ -100,56 +100,54 @@ export default function PatientFormModal({
   }, [open]);
 
   useEffect(() => {
-  if (!open) return;
+    if (!open) return;
 
-  if (!patient) {
-    resetForm();
-    return;
-  }
+    if (!patient) {
+      resetForm();
+      return;
+    }
 
-  setNom(patient.nom || '');
-  setPrenoms(patient.prenoms || '');
-  setSexe(patient.sexe || '');
-  setTelephone(patient.telephone || '');
-  setQuartier(patient.quartier || '');
-  setPersonneContact(patient.personneContact || '');
+    setNom(patient.nom || '');
+    setPrenoms(patient.prenoms || '');
+    setSexe(patient.sexe || '');
+    setTelephone(patient.telephone || '');
+    setQuartier(patient.quartier || '');
+    setPersonneContact(patient.personneContact || '');
 
-  setDateNaissance(
-    patient.dateNaissance
-      ? new Date(patient.dateNaissance).toISOString().split('T')[0]
-      : '',
-  );
-
-  setAge(patient.age ? String(patient.age) : '');
-
-  const patientIsAssure = Boolean(patient.isAssure || patient.assuranceId);
-  setIsAssure(patientIsAssure);
-
-  if (patientIsAssure) {
-    setNomGarant(patient.assurance?.nomGarant || '');
-
-    setSelectedCompagnieId(
-      patient.assurance?.compagnieId
-        ? String(patient.assurance.compagnieId)
-        : patient.assurance?.compagnie?.idCompagnie
-          ? String(patient.assurance.compagnie.idCompagnie)
-          : '',
+    setDateNaissance(
+      patient.dateNaissance ? new Date(patient.dateNaissance).toISOString().split('T')[0] : '',
     );
 
-    setTauxCouverture(
-      patient.tauxCouverture !== null && patient.tauxCouverture !== undefined
-        ? String(patient.tauxCouverture)
-        : '100',
-    );
+    setAge(patient.age ? String(patient.age) : '');
 
-    setMatriculeAssure(patient.matriculeAssure || '');
-  } else {
-    setNomGarant('');
-    setSelectedCompagnieId('');
-    setTauxCouverture('100');
-    setMatriculeAssure('');
-  }
-}, [open, patient]);
+    const patientIsAssure = Boolean(patient.isAssure || patient.assuranceId);
+    setIsAssure(patientIsAssure);
+
+    if (patientIsAssure) {
+      setNomGarant(patient.assurance?.nomGarant || '');
+
+      setSelectedCompagnieId(
+        patient.assurance?.compagnieId
+          ? String(patient.assurance.compagnieId)
+          : patient.assurance?.compagnie?.idCompagnie
+            ? String(patient.assurance.compagnie.idCompagnie)
+            : '',
+      );
+
+      setTauxCouverture(
+        patient.tauxCouverture !== null && patient.tauxCouverture !== undefined
+          ? String(patient.tauxCouverture)
+          : '100',
+      );
+
+      setMatriculeAssure(patient.matriculeAssure || '');
+    } else {
+      setNomGarant('');
+      setSelectedCompagnieId('');
+      setTauxCouverture('100');
+      setMatriculeAssure('');
+    }
+  }, [open, patient]);
 
   useEffect(() => {
     if (!dateNaissance) return;
@@ -296,7 +294,10 @@ export default function PatientFormModal({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1.5">
-                <label htmlFor="nom" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="nom"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Nom du patient *
                 </label>
                 <input
@@ -310,7 +311,10 @@ export default function PatientFormModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="prenoms" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="prenoms"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Prénoms
                 </label>
                 <input
@@ -325,7 +329,10 @@ export default function PatientFormModal({
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5">
-                <label htmlFor="sexe" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="sexe"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Sexe
                 </label>
                 <select
@@ -341,7 +348,10 @@ export default function PatientFormModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="dateNaissance" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="dateNaissance"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Date de naissance
                 </label>
                 <input
@@ -354,7 +364,10 @@ export default function PatientFormModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="age" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="age"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Âge
                 </label>
                 <input
@@ -372,11 +385,17 @@ export default function PatientFormModal({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1.5">
-                <label htmlFor="telephone" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="telephone"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Téléphone
                 </label>
                 <div className="relative">
-                  <Phone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Phone
+                    size={14}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
                   <input
                     id="telephone"
                     value={telephone}
@@ -388,7 +407,10 @@ export default function PatientFormModal({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="personneContact" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+                <label
+                  htmlFor="personneContact"
+                  className="ml-1 text-[10px] font-black uppercase text-slate-500"
+                >
                   Personne à contacter
                 </label>
                 <input
@@ -402,11 +424,17 @@ export default function PatientFormModal({
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="quartier" className="ml-1 text-[10px] font-black uppercase text-slate-500">
+              <label
+                htmlFor="quartier"
+                className="ml-1 text-[10px] font-black uppercase text-slate-500"
+              >
                 Quartier / Domicile
               </label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <MapPin
+                  size={14}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   id="quartier"
                   value={quartier}
@@ -420,12 +448,16 @@ export default function PatientFormModal({
 
           <div
             className={`rounded-[2rem] border p-6 transition-all duration-300 ${
-              isAssure ? 'border-blue-200 bg-blue-50/40 shadow-inner' : 'border-slate-100 bg-slate-50/50'
+              isAssure
+                ? 'border-blue-200 bg-blue-50/40 shadow-inner'
+                : 'border-slate-100 bg-slate-50/50'
             }`}
           >
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`rounded-xl p-2 ${isAssure ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                <div
+                  className={`rounded-xl p-2 ${isAssure ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}
+                >
                   <ShieldCheck size={20} />
                 </div>
 
@@ -453,7 +485,10 @@ export default function PatientFormModal({
             {isAssure && (
               <div className="grid gap-4 duration-500 animate-in fade-in slide-in-from-top-2 md:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label htmlFor="compagnie" className="ml-1 text-[10px] font-black uppercase text-blue-600">
+                  <label
+                    htmlFor="compagnie"
+                    className="ml-1 text-[10px] font-black uppercase text-blue-600"
+                  >
                     Compagnie d&apos;assurance
                   </label>
                   <select
@@ -473,7 +508,10 @@ export default function PatientFormModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="nomGarant" className="ml-1 text-[10px] font-black uppercase text-blue-600">
+                  <label
+                    htmlFor="nomGarant"
+                    className="ml-1 text-[10px] font-black uppercase text-blue-600"
+                  >
                     Garant
                   </label>
                   <input
@@ -486,7 +524,10 @@ export default function PatientFormModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="matriculeAssure" className="ml-1 text-[10px] font-black uppercase text-blue-600">
+                  <label
+                    htmlFor="matriculeAssure"
+                    className="ml-1 text-[10px] font-black uppercase text-blue-600"
+                  >
                     N° Matricule assuré
                   </label>
                   <input
@@ -499,7 +540,10 @@ export default function PatientFormModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="tauxCouverture" className="ml-1 text-[10px] font-black uppercase text-blue-600">
+                  <label
+                    htmlFor="tauxCouverture"
+                    className="ml-1 text-[10px] font-black uppercase text-blue-600"
+                  >
                     Taux de couverture (%)
                   </label>
                   <input

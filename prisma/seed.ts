@@ -1,41 +1,46 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import bcrypt from 'bcryptjs';
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL manquante dans .env');
+}
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: process.env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('🚀 Tentative de connexion à Neon...');
+  console.log('🌱 Seed admin...');
 
-  const compagnies = [
-    { nomCompagnie: 'MUGEF-CI' },
-    { nomCompagnie: 'ASCOMA' },
-    { nomCompagnie: 'NSIA ASSURANCES' },
-    { nomCompagnie: 'SANLAM' },
-    { nomCompagnie: 'ALLIANZ' },
-    { nomCompagnie: 'SUNU' },
-    { nomCompagnie: 'GNA ASSURANCES' },
-    { nomCompagnie: 'AXA' },
-  ];
+  const hashedPassword = await bcrypt.hash('Password', 10);
 
-  for (const compagnie of compagnies) {
-    await prisma.compagnieAssurance.upsert({
-      where: { nomCompagnie: compagnie.nomCompagnie },
-      update: {},
-      create: compagnie,
-    });
-  }
+  const admin = await prisma.utilisateur.upsert({
+    where: { login: 'admin@clinique.fr' },
+    update: {
+      motDePasse: hashedPassword,
+      role: 'administrateur',
+      actif: true,
+    },
+    create: {
+      login: 'admin@clinique.fr',
+      motDePasse: hashedPassword,
+      nom: 'ADMIN',
+      prenom: 'SYSTEM',
+      role: 'administrateur',
+      actif: true,
+    },
+  });
 
-  console.log('✅ Catalogue des compagnies créé !');
+  console.log('✅ Admin prêt :', admin.login);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Erreur lors du seed :', e);
+    console.error('❌ Erreur seed:', e);
     process.exit(1);
   })
   .finally(async () => {
