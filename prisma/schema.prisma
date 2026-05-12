@@ -163,31 +163,6 @@ model Patient {
   @@map("patient")
 }
 
-model Consultation {
-  idConsultation   Int      @id @default(autoincrement()) @map("id_consultation")
-  dateConsultation DateTime @default(now()) @map("date_consultation")
-
-  motif        String?
-  antecedents  String?
-  constantes   String?
-  diagnostic   String?
-  prescription String?
-  compteRendu  String? @map("compte_rendu")
-
-  patientId Int     @map("patient_id")
-  patient   Patient @relation(fields: [patientId], references: [id_patient])
-
-  medecinId Int?         @map("medecin_id")
-  medecin   Utilisateur? @relation(fields: [medecinId], references: [idUser])
-
-  serviceId Int?     @map("service_id")
-  service   Service? @relation(fields: [serviceId], references: [idService])
-
-  examens Examen[] @relation("ConsultationExamens")
-
-  @@map("consultation")
-}
-
 model Service {
   idService   Int     @id @default(autoincrement()) @map("id_service")
   nomService  String  @map("nom_service")
@@ -427,4 +402,55 @@ model LigneFacture {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("ligne_facture")
+}
+
+model Consultation {
+  idConsultation   Int      @id @default(autoincrement()) @map("id_consultation")
+  dateConsultation DateTime @default(now()) @map("date_consultation")
+
+  motifs       ConsultationMotif[]
+  motifLibre   String?             @map("motif_libre")
+  antecedents  String?
+  constantes   String?
+  diagnostic   String?
+  prescription String?
+  compteRendu  String?             @map("compte_rendu")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
+  medecinId Int?         @map("medecin_id")
+  medecin   Utilisateur? @relation(fields: [medecinId], references: [idUser])
+
+  serviceId Int?     @map("service_id")
+  service   Service? @relation(fields: [serviceId], references: [idService])
+
+  examens Examen[] @relation("ConsultationExamens")
+
+  @@map("consultation")
+}
+
+model MotifConsultation {
+  idMotif   Int     @id @default(autoincrement()) @map("id_motif")
+  libelle   String  @unique
+  categorie String?
+  actif     Boolean @default(true)
+
+  consultations ConsultationMotif[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("motif_consultation")
+}
+
+model ConsultationMotif {
+  consultationId Int @map("consultation_id")
+  motifId        Int @map("motif_id")
+
+  consultation Consultation      @relation(fields: [consultationId], references: [idConsultation], onDelete: Cascade)
+  motif        MotifConsultation @relation(fields: [motifId], references: [idMotif])
+
+  @@id([consultationId, motifId])
+  @@map("consultation_motif")
 }

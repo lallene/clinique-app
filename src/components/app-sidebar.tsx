@@ -17,6 +17,7 @@ import {
   BarChart3,
   Settings,
   Building2,
+  ListChecks
 } from 'lucide-react';
 
 const navLinks = [
@@ -96,6 +97,10 @@ const navLinks = [
     title: 'Paramètres',
     icon: Settings,
     href: '/parametres',
+  },
+  { title: 'Motifs', 
+    icon: ListChecks, 
+    href: '/motifs' 
   },
 ];
 
