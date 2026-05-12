@@ -11,6 +11,7 @@ export async function GET() {
           },
         },
       },
+
       orderBy: {
         id_patient: 'desc',
       },
@@ -29,49 +30,71 @@ export async function GET() {
     );
   }
 }
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { assuranceData, ...data } = body;
 
-    const isAssure = Boolean(data.isAssure && assuranceData);
+    const isAssure = Boolean(body.isAssure && body.assuranceId);
+
     const prefix = isAssure ? 'AS' : 'NA';
+
     const count = await prisma.patient.count();
+
     const year = new Date().getFullYear();
 
-    const numeroDossier = `${prefix}-${year}-${(count + 1).toString().padStart(4, '0')}`;
+    const numeroDossier = `${prefix}-${year}-${(count + 1)
+      .toString()
+      .padStart(4, '0')}`;
 
     const assurance = isAssure
-      ? await prisma.assurance.create({
-          data: {
-            compagnieId: Number(assuranceData.compagnieId),
-            nomGarant: assuranceData.nomGarant || 'PARTICULIER',
-            contact: assuranceData.contact || null,
-            convention: assuranceData.convention || null,
+      ? await prisma.assurance.findUnique({
+          where: {
+            idAssurance: Number(body.assuranceId),
           },
         })
       : null;
 
+    if (isAssure && !assurance) {
+      return NextResponse.json(
+        {
+          error: 'Convention assurance introuvable',
+        },
+        { status: 404 },
+      );
+    }
+
     const patient = await prisma.patient.create({
       data: {
-        nom: data.nom,
-        prenoms: data.prenoms || null,
-        sexe: data.sexe || null,
-        telephone: data.telephone || null,
-        quartier: data.quartier || null,
-        personneContact: data.personneContact || null,
+        nom: body.nom,
+        prenoms: body.prenoms || null,
+        sexe: body.sexe || null,
 
-        dateNaissance: data.dateNaissance ? new Date(data.dateNaissance) : null,
+        telephone: body.telephone || null,
+        quartier: body.quartier || null,
+        personneContact: body.personneContact || null,
 
-        age: data.age ? Number(data.age) : null,
+        dateNaissance: body.dateNaissance
+          ? new Date(body.dateNaissance)
+          : null,
+
+        age: body.age ? Number(body.age) : null,
 
         numeroDossier,
+
         isAssure,
-        tauxCouverture: isAssure ? Number(assuranceData.tauxCouverture) : 0,
-        matriculeAssure: isAssure ? assuranceData.matriculeAssure || null : null,
+
+        tauxCouverture: isAssure
+          ? Number(body.tauxCouverture || assurance?.tauxCouverture || 0)
+          : 0,
+
+        matriculeAssure: isAssure
+          ? body.matriculeAssure || null
+          : null,
 
         assuranceId: assurance?.idAssurance || null,
       },
+
       include: {
         assurance: {
           include: {
@@ -98,71 +121,59 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { idPatient, assuranceData, ...data } = body;
 
-    if (!idPatient) {
-      return NextResponse.json({ error: 'ID patient manquant' }, { status: 400 });
+    if (!body.idPatient) {
+      return NextResponse.json(
+        {
+          error: 'ID patient manquant',
+        },
+        { status: 400 },
+      );
     }
 
-    const isAssure = Boolean(data.isAssure && assuranceData);
+    const isAssure = Boolean(body.isAssure && body.assuranceId);
 
-    const existingPatient = await prisma.patient.findUnique({
-      where: { id_patient: Number(idPatient) },
-      include: { assurance: true },
-    });
-
-    if (!existingPatient) {
-      return NextResponse.json({ error: 'Patient introuvable' }, { status: 404 });
-    }
-
-    let assuranceId: number | null = existingPatient.assuranceId ?? null;
-
-    if (isAssure) {
-      if (assuranceId) {
-        const updatedAssurance = await prisma.assurance.update({
-          where: { idAssurance: assuranceId },
-          data: {
-            compagnieId: Number(assuranceData.compagnieId),
-            nomGarant: assuranceData.nomGarant || 'PARTICULIER',
-            contact: assuranceData.contact || null,
-            convention: assuranceData.convention || null,
+    const assurance = isAssure
+      ? await prisma.assurance.findUnique({
+          where: {
+            idAssurance: Number(body.assuranceId),
           },
-        });
-
-        assuranceId = updatedAssurance.idAssurance;
-      } else {
-        const newAssurance = await prisma.assurance.create({
-          data: {
-            compagnieId: Number(assuranceData.compagnieId),
-            nomGarant: assuranceData.nomGarant || 'PARTICULIER',
-            contact: assuranceData.contact || null,
-            convention: assuranceData.convention || null,
-          },
-        });
-
-        assuranceId = newAssurance.idAssurance;
-      }
-    } else {
-      assuranceId = null;
-    }
+        })
+      : null;
 
     const patient = await prisma.patient.update({
-      where: { id_patient: Number(idPatient) },
+      where: {
+        id_patient: Number(body.idPatient),
+      },
+
       data: {
-        nom: data.nom,
-        prenoms: data.prenoms || null,
-        sexe: data.sexe || null,
-        telephone: data.telephone || null,
-        quartier: data.quartier || null,
-        personneContact: data.personneContact || null,
-        dateNaissance: data.dateNaissance ? new Date(data.dateNaissance) : null,
-        age: data.age ? Number(data.age) : null,
+        nom: body.nom,
+        prenoms: body.prenoms || null,
+        sexe: body.sexe || null,
+
+        telephone: body.telephone || null,
+        quartier: body.quartier || null,
+        personneContact: body.personneContact || null,
+
+        dateNaissance: body.dateNaissance
+          ? new Date(body.dateNaissance)
+          : null,
+
+        age: body.age ? Number(body.age) : null,
 
         isAssure,
-        tauxCouverture: isAssure ? Number(assuranceData.tauxCouverture) : 0,
-        matriculeAssure: isAssure ? assuranceData.matriculeAssure || null : null,
-        assuranceId,
+
+        tauxCouverture: isAssure
+          ? Number(body.tauxCouverture || assurance?.tauxCouverture || 0)
+          : 0,
+
+        matriculeAssure: isAssure
+          ? body.matriculeAssure || null
+          : null,
+
+        assuranceId: assurance?.idAssurance || null,
       },
+
       include: {
         assurance: {
           include: {
@@ -191,12 +202,22 @@ export async function DELETE(req: Request) {
     const { id } = await req.json();
 
     await prisma.patient.delete({
-      where: { id_patient: Number(id) },
+      where: {
+        id_patient: Number(id),
+      },
     });
 
-    return NextResponse.json({ message: 'Patient supprimé' });
+    return NextResponse.json({
+      message: 'Patient supprimé',
+    });
   } catch (error) {
     console.error('❌ DELETE /api/patients:', error);
-    return NextResponse.json({ error: 'Erreur de suppression' }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        error: 'Erreur suppression patient',
+      },
+      { status: 500 },
+    );
   }
 }

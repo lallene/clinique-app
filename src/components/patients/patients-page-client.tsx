@@ -4,6 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { Edit, Plus, Search, ShieldCheck, Trash2, User, Users } from 'lucide-react';
 import PatientFormModal from './patient-form-modal';
 
+  type PatientsPageClientProps = {
+  currentUser: {
+    name: string;
+    email: string;
+    role: string;
+  };
+};
+
 type Patient = {
   idPatient?: number;
   id_patient?: number;
@@ -22,6 +30,7 @@ type Patient = {
   matriculeAssure?: string | null;
   assurance?: {
     nomGarant?: string | null;
+    compagnieId?: number | null;
     compagnie?: {
       idCompagnie?: number;
       nomCompagnie?: string | null;
@@ -29,7 +38,9 @@ type Patient = {
   } | null;
 };
 
-export default function PatientsPageClient() {
+export default function PatientsPageClient({
+  currentUser,
+}: PatientsPageClientProps) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -57,9 +68,14 @@ export default function PatientsPageClient() {
     }
   }
 
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPatients();
   }, []);
+
+  const totalAssures = patients.filter((patient) => patient.isAssure || patient.assuranceId).length;
+  const totalNonAssures = patients.length - totalAssures;
 
   const filteredPatients = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -68,11 +84,17 @@ export default function PatientsPageClient() {
 
     return patients.filter((patient) => {
       const fullName = `${patient.prenoms ?? ''} ${patient.nom ?? ''}`.toLowerCase();
+      const assurance = patient.assurance?.compagnie?.nomCompagnie?.toLowerCase() ?? '';
+      const garant = patient.assurance?.nomGarant?.toLowerCase() ?? '';
+      const matricule = patient.matriculeAssure?.toLowerCase() ?? '';
 
       return (
         fullName.includes(q) ||
         (patient.telephone ?? '').includes(q) ||
-        (patient.numeroDossier ?? '').toLowerCase().includes(q)
+        (patient.numeroDossier ?? '').toLowerCase().includes(q) ||
+        assurance.includes(q) ||
+        garant.includes(q) ||
+        matricule.includes(q)
       );
     });
   }, [patients, search]);
@@ -140,7 +162,7 @@ export default function PatientsPageClient() {
           <p className="mt-1 text-xs font-medium text-slate-500">Inscrits à ce jour</p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
               <ShieldCheck size={24} />
@@ -150,10 +172,22 @@ export default function PatientsPageClient() {
             </span>
           </div>
 
-          <p className="mt-4 text-3xl font-black text-slate-900">
-            {patients.filter((patient) => patient.assuranceId).length}
-          </p>
+          <p className="mt-4 text-3xl font-black text-slate-900">{totalAssures}</p>
           <p className="mt-1 text-xs font-medium text-slate-500">Patients sous couverture</p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="rounded-2xl bg-slate-100 p-3 text-slate-600">
+              <User size={24} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Cash / Privé
+            </span>
+          </div>
+
+          <p className="mt-4 text-3xl font-black text-slate-900">{totalNonAssures}</p>
+          <p className="mt-1 text-xs font-medium text-slate-500">Patients non assurés</p>
         </div>
       </div>
 
@@ -174,24 +208,26 @@ export default function PatientsPageClient() {
               />
               <input
                 type="text"
-                placeholder="Rechercher un patient..."
+                placeholder="Rechercher nom, dossier, assurance, garant..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-50"
               />
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedPatient(null);
-                setOpenModal(true);
-              }}
-              className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 active:scale-95"
-            >
-              <Plus size={20} />
-              Nouveau Dossier
-            </button>
+            {['administrateur', 'caisse', 'direction', 'USER'].includes(currentUser.role) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPatient(null);
+                  setOpenModal(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 active:scale-95"
+              >
+                <Plus size={20} />
+                Nouveau Dossier
+              </button>
+            )}
           </div>
         </div>
 
@@ -202,7 +238,7 @@ export default function PatientsPageClient() {
         )}
 
         <div className="w-full overflow-x-auto rounded-3xl border border-slate-100 shadow-sm">
-          <table className="w-full min-w-[1200px] bg-white">
+          <table className="w-full min-w-[1250px] bg-white">
             <thead>
               <tr className="bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th className="px-6 py-5">Identité du Patient</th>
@@ -233,6 +269,7 @@ export default function PatientsPageClient() {
               ) : (
                 filteredPatients.map((patient) => {
                   const patientId = patient.idPatient ?? patient.id_patient;
+                  const isCovered = Boolean(patient.isAssure || patient.assuranceId);
 
                   return (
                     <tr key={patientId} className="group transition hover:bg-emerald-50/30">
@@ -244,7 +281,7 @@ export default function PatientsPageClient() {
 
                           <div>
                             <p className="font-bold leading-tight text-slate-900">
-                              {patient.prenoms} {patient.nom}
+                              {patient.prenoms || ''} {patient.nom}
                             </p>
                             <p className="mt-0.5 text-[11px] font-medium text-slate-400">
                               {patient.telephone || 'Aucun contact'}
@@ -286,7 +323,7 @@ export default function PatientsPageClient() {
                       </td>
 
                       <td className="px-6 py-5 text-right">
-                        {patient.assuranceId ? (
+                        {isCovered ? (
                           <div className="flex flex-col items-end gap-1">
                             <span
                               className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-black shadow-sm ${
@@ -295,15 +332,19 @@ export default function PatientsPageClient() {
                                   : 'border-blue-200 bg-blue-100 text-blue-700'
                               }`}
                             >
-                              {patient.tauxCouverture || 0}%
+                              {patient.tauxCouverture || 0}% couvert
                             </span>
 
-                            <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-400">
-                              {patient.assurance?.nomGarant || 'ASSURÉ'}
+                            <span className="text-[10px] font-bold uppercase tracking-tighter text-slate-500">
+                              {patient.assurance?.compagnie?.nomCompagnie || 'ASSURANCE'}
                             </span>
 
                             <span className="text-[10px] font-medium text-slate-400">
-                              {patient.assurance?.compagnie?.nomCompagnie || ''}
+                              Garant : {patient.assurance?.nomGarant || '-'}
+                            </span>
+
+                            <span className="text-[10px] font-medium text-slate-400">
+                              Matricule : {patient.matriculeAssure || '-'}
                             </span>
                           </div>
                         ) : (
@@ -344,6 +385,7 @@ export default function PatientsPageClient() {
       </div>
 
       <PatientFormModal
+        key={selectedPatient ? `edit-${selectedPatient.idPatient ?? selectedPatient.id_patient}` : 'new-patient'}
         open={openModal}
         patient={selectedPatient}
         onClose={() => {

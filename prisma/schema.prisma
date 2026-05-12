@@ -8,95 +8,180 @@ datasource db {
 }
 
 model Utilisateur {
-  idUser        Int              @id @default(autoincrement()) @map("id_user")
-  login         String           @unique
-  motDePasse    String           @map("mot_de_passe")
-  nom           String?
-  prenom        String?
-  role          String           // administrateur, medecin, infirmier, caisse, direction
-  actif         Boolean          @default(true)
+  idUser     Int     @id @default(autoincrement()) @map("id_user")
+  login      String  @unique
+  motDePasse String  @map("mot_de_passe")
+  nom        String?
+  prenom     String?
+  role       String
+  actif      Boolean @default(true)
 
-  consultations      Consultation[]
-  factures           Facture[]
-  logs               LogAudit[]
-  hospitalisations   Hospitalisation[] @relation("MedecinHospitalisation")
-  rendezvous         RendezVous[]      @relation("MedecinRendezVous")
+  consultations    Consultation[]
+  factures         Facture[]
+  logs             LogAudit[]
+  hospitalisations Hospitalisation[] @relation("MedecinHospitalisation")
+  rendezvous       RendezVous[]      @relation("MedecinRendezVous")
 
   @@map("utilisateur")
 }
 
 model CompagnieAssurance {
-  idCompagnie    Int         @id @default(autoincrement()) @map("id_compagnie")
-  nomCompagnie   String      @unique @map("nom_compagnie") // ex: ASCOMA, MUGEF-CI, NSIA
-  assurances     Assurance[]
+  idCompagnie   Int     @id @default(autoincrement()) @map("id_compagnie")
+  nomCompagnie  String  @unique @map("nom_compagnie")
+  codeCompagnie String? @unique @map("code_compagnie")
+
+  contact   String?
+  telephone String?
+  email     String?
+  adresse   String?
+
+  assurances Assurance[]
 
   @@map("compagnie_assurance")
 }
 
 model Assurance {
-  idAssurance    Int                @id @default(autoincrement()) @map("id_assurance")
-  compagnieId    Int                @map("compagnie_id")
-  compagnie      CompagnieAssurance @relation(fields: [compagnieId], references: [idCompagnie])
-  
-  nomGarant      String             @map("nom_garant") // ex: CONCENTRIX, PORTEO, TOTAL
-  contact        String?
-  convention     String?   
-  
-  patients       Patient[]
-  factures       Facture[]
+  idAssurance Int @id @default(autoincrement()) @map("id_assurance")
+
+  compagnieId Int                @map("compagnie_id")
+  compagnie   CompagnieAssurance @relation(fields: [compagnieId], references: [idCompagnie])
+
+  nomGarant String @map("nom_garant")
+
+  codeAssurance String? @unique @map("code_assurance")
+  contact       String?
+  telephone     String?
+  email         String?
+  adresse       String?
+
+  bp                 String?
+  rccm               String?
+  compteContribuable String? @map("compte_contribuable")
+  regimeFiscal       String? @map("regime_fiscal")
+  centreImpot        String? @map("centre_impot")
+
+  convention          String?
+  dateDebutConvention DateTime? @map("date_debut_convention")
+  dateFinConvention   DateTime? @map("date_fin_convention")
+
+  tauxCouverture    Float @default(0) @map("taux_couverture")
+  echeanceReglement Int?  @default(30) @map("echeance_reglement")
+
+  controleFacturation  Boolean @default(false) @map("controle_facturation")
+  numeroBonObligatoire Boolean @default(false) @map("numero_bon_obligatoire")
+  gestionBonsPharmacie Boolean @default(false) @map("gestion_bons_pharmacie")
+
+  modeleFacture String? @default("AUCUN") @map("modele_facture")
+  tarifSpecial  Boolean @default(false) @map("tarif_special")
+
+  statut      String  @default("active")
+  observation String?
+
+  patients          Patient[]
+  factures          Facture[]
+  tarifs            AssuranceTarif[]
+  bonsPriseEnCharge BonPriseEnCharge[]
 
   @@map("assurance")
 }
 
+model AssuranceTarif {
+  idTarif Int @id @default(autoincrement()) @map("id_tarif")
+
+  assuranceId Int       @map("assurance_id")
+  assurance   Assurance @relation(fields: [assuranceId], references: [idAssurance])
+
+  visiteGeneraliste Float? @default(0) @map("visite_generaliste")
+  visiteSpecialiste Float? @default(0) @map("visite_specialiste")
+  ami               Float? @default(0)
+
+  surveillanceParticuliere Float? @default(0) @map("surveillance_particuliere")
+  soinsIntensifs           Float? @default(0) @map("soins_intensifs")
+  neonatalogie             Float? @default(0)
+
+  chambreHospitalisationMode String? @default("tiers_payant") @map("chambre_hospitalisation_mode")
+  paiementParJour            Boolean @default(false) @map("paiement_par_jour")
+
+  actif     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("assurance_tarif")
+}
+
+model BonPriseEnCharge {
+  idBon Int @id @default(autoincrement()) @map("id_bon")
+
+  numeroBon      String    @unique @map("numero_bon")
+  dateEmission   DateTime  @default(now()) @map("date_emission")
+  dateExpiration DateTime? @map("date_expiration")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
+  assuranceId Int       @map("assurance_id")
+  assurance   Assurance @relation(fields: [assuranceId], references: [idAssurance])
+
+  montantAutorise Float?  @map("montant_autorise")
+  observation     String?
+
+  statut String @default("valide")
+
+  factures Facture[]
+
+  @@map("bon_prise_en_charge")
+}
+
 model Patient {
-  id_patient       Int              @id @default(autoincrement()) @map("id_patient")
-  codePatient     String?           @unique @map("code_patient")
+  id_patient      Int       @id @default(autoincrement()) @map("id_patient")
+  codePatient     String?   @unique @map("code_patient")
   nom             String
-  prenoms         String?          
-  sexe            String?          
-  dateNaissance   DateTime?        @map("date_naissance")
-  age             Int?             
-  telephone       String?          
-  quartier        String?          
-  personneContact String?          @map("personne_contact")
-  numeroDossier   String?          @unique @map("numero_dossier")
+  prenoms         String?
+  sexe            String?
+  dateNaissance   DateTime? @map("date_naissance")
+  age             Int?
+  telephone       String?
+  quartier        String?
+  personneContact String?   @map("personne_contact")
+  numeroDossier   String?   @unique @map("numero_dossier")
 
-  // Volet Assurance
-  isAssure        Boolean          @default(false) @map("is_assure")
-  tauxCouverture  Float?           @default(0) @map("taux_couverture")
-  matriculeAssure String?          @map("matricule_assure")
-  
-  assuranceId     Int?             @map("assurance_id")
-  assurance       Assurance?       @relation(fields: [assuranceId], references: [idAssurance])
+  isAssure        Boolean @default(false) @map("is_assure")
+  tauxCouverture  Float?  @default(0) @map("taux_couverture")
+  matriculeAssure String? @map("matricule_assure")
 
-  consultations    Consultation[]
-  hospitalisations Hospitalisation[]
-  factures         Facture[]
-  examens          Examen[]
-  rendezvous       RendezVous[]
+  assuranceId Int?       @map("assurance_id")
+  assurance   Assurance? @relation(fields: [assuranceId], references: [idAssurance])
+
+  consultations       Consultation[]
+  hospitalisations    Hospitalisation[]
+  factures            Facture[]
+  examens             Examen[]
+  rendezvous          RendezVous[]
   mouvementsPharmacie MvtPharmacie[]
+  bonsPriseEnCharge   BonPriseEnCharge[]
 
   @@map("patient")
 }
 
 model Consultation {
-  idConsultation Int       @id @default(autoincrement()) @map("id_consultation")
+  idConsultation   Int      @id @default(autoincrement()) @map("id_consultation")
   dateConsultation DateTime @default(now()) @map("date_consultation")
-  motif           String?
-  antecedents     String?
-  constantes      String?
-  diagnostic      String?
-  prescription    String?
-  compteRendu     String?  @map("compte_rendu")
-  
-  patientId       Int      @map("patient_id")
-  patient         Patient  @relation(fields: [patientId], references: [id_patient])
-  
-  medecinId       Int?     @map("medecin_id")
-  medecin         Utilisateur? @relation(fields: [medecinId], references: [idUser])
-  
-  serviceId       Int?     @map("service_id")
-  service         Service?     @relation(fields: [serviceId], references: [idService])
+
+  motif        String?
+  antecedents  String?
+  constantes   String?
+  diagnostic   String?
+  prescription String?
+  compteRendu  String? @map("compte_rendu")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
+  medecinId Int?         @map("medecin_id")
+  medecin   Utilisateur? @relation(fields: [medecinId], references: [idUser])
+
+  serviceId Int?     @map("service_id")
+  service   Service? @relation(fields: [serviceId], references: [idService])
 
   examens Examen[] @relation("ConsultationExamens")
 
@@ -104,38 +189,47 @@ model Consultation {
 }
 
 model Service {
-  idService   Int      @id @default(autoincrement()) @map("id_service")
-  nomService  String   @map("nom_service")
-  typeService String?  @map("type_service")
+  idService   Int     @id @default(autoincrement()) @map("id_service")
+  nomService  String  @map("nom_service")
+  typeService String? @map("type_service")
+
   consultations Consultation[]
-  rendezvous  RendezVous[]
+  rendezvous    RendezVous[]
 
   @@map("service")
 }
 
 model Hospitalisation {
-  idHospit         Int       @id @default(autoincrement()) @map("id_hospit")
-  patientId        Int       @map("patient_id")
-  patient          Patient   @relation(fields: [patientId], references: [id_patient])
+  idHospit Int @id @default(autoincrement()) @map("id_hospit")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
   dateEntree       DateTime  @default(now()) @map("date_entree")
   dateSortie       DateTime? @map("date_sortie")
   diagnosticEntree String?   @map("diagnostic_entree")
-  medecinResponsable Int?    @map("medecin_responsable")
-  medecin          Utilisateur? @relation("MedecinHospitalisation", fields: [medecinResponsable], references: [idUser])
-  chambre          String?
-  lit              String?
-  statut           String?   @default("en_cours")
+
+  medecinResponsable Int?         @map("medecin_responsable")
+  medecin            Utilisateur? @relation("MedecinHospitalisation", fields: [medecinResponsable], references: [idUser])
+
+  chambre String?
+  lit     String?
+  statut  String? @default("en_cours")
+
   mouvementsPharmacie MvtPharmacie[]
 
   @@map("hospitalisation")
 }
 
 model Examen {
-  idExamen        Int       @id @default(autoincrement()) @map("id_examen")
-  patientId       Int       @map("patient_id")
-  patient         Patient   @relation(fields: [patientId], references: [id_patient])
-  consultationId  Int?      @map("consultation_id")
-  consultation    Consultation? @relation("ConsultationExamens", fields: [consultationId], references: [idConsultation])
+  idExamen Int @id @default(autoincrement()) @map("id_examen")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
+  consultationId Int?          @map("consultation_id")
+  consultation   Consultation? @relation("ConsultationExamens", fields: [consultationId], references: [idConsultation])
+
   typeExamen      String    @map("type_examen")
   resultat        String?
   statut          String?   @default("demande")
@@ -147,34 +241,44 @@ model Examen {
 }
 
 model Facture {
-  idFacture        Int       @id @default(autoincrement()) @map("id_facture")
-  numeroFacture    String    @unique @map("numero_facture")
-  dateFacture      DateTime  @default(now()) @map("date_facture")
-  montantTotal     Float     @map("montant_total")
-  montantPatient   Float?    @map("montant_patient")
-  montantAssurance Float?    @map("montant_assurance")
-  statut           String?   @default("brouillon")
-  
-  patientId        Int       @map("patient_id")
-  patient          Patient   @relation(fields: [patientId], references: [id_patient])
-  
-  assuranceId      Int?      @map("assurance_id")
-  assurance        Assurance? @relation(fields: [assuranceId], references: [idAssurance])
-  
-  creePar          Int?      @map("cree_par")
-  utilisateur      Utilisateur? @relation(fields: [creePar], references: [idUser])
-  paiements        Paiement[]
+  idFacture     Int      @id @default(autoincrement()) @map("id_facture")
+  numeroFacture String   @unique @map("numero_facture")
+  dateFacture   DateTime @default(now()) @map("date_facture")
+
+  montantTotal     Float  @map("montant_total")
+  montantPatient   Float? @map("montant_patient")
+  montantAssurance Float? @map("montant_assurance")
+  tauxCouverture   Float? @map("taux_couverture")
+
+  statut String? @default("brouillon")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
+  assuranceId Int?       @map("assurance_id")
+  assurance   Assurance? @relation(fields: [assuranceId], references: [idAssurance])
+
+  bonId            Int?              @map("bon_id")
+  bonPriseEnCharge BonPriseEnCharge? @relation(fields: [bonId], references: [idBon])
+
+  creePar     Int?         @map("cree_par")
+  utilisateur Utilisateur? @relation(fields: [creePar], references: [idUser])
+
+  lignes LigneFacture[]
+
+  paiements Paiement[]
 
   @@map("facture")
 }
 
 model Paiement {
-  idPaiement    Int      @id @default(autoincrement()) @map("id_paiement")
-  datePaiement  DateTime @default(now()) @map("date_paiement")
-  montant       Float
-  modePaiement  String?  @map("mode_paiement")
-  factureId     Int      @map("facture_id")
-  facture       Facture  @relation(fields: [factureId], references: [idFacture])
+  idPaiement   Int      @id @default(autoincrement()) @map("id_paiement")
+  datePaiement DateTime @default(now()) @map("date_paiement")
+  montant      Float
+  modePaiement String?  @map("mode_paiement")
+
+  factureId Int     @map("facture_id")
+  facture   Facture @relation(fields: [factureId], references: [idFacture])
 
   @@map("paiement")
 }
@@ -187,78 +291,92 @@ model ProduitPharmacie {
   prixAchat     Float   @map("prix_achat")
   prixVente     Float   @map("prix_vente")
   quantiteStock Int     @default(0) @map("quantite_stock")
-  mvtPharmacie  MvtPharmacie[]
+
+  mvtPharmacie MvtPharmacie[]
 
   @@map("produit_pharmacie")
 }
 
 model MvtPharmacie {
-  idMvt      Int        @id @default(autoincrement()) @map("id_mvt")
-  produitId  Int        @map("produit_id")
-  produit    ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
-  patientId  Int?       @map("patient_id")
-  patient    Patient?   @relation(fields: [patientId], references: [id_patient])
-  hospitId   Int?       @map("hospit_id")
+  idMvt Int @id @default(autoincrement()) @map("id_mvt")
+
+  produitId Int              @map("produit_id")
+  produit   ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
+
+  patientId Int?     @map("patient_id")
+  patient   Patient? @relation(fields: [patientId], references: [id_patient])
+
+  hospitId        Int?             @map("hospit_id")
   hospitalisation Hospitalisation? @relation(fields: [hospitId], references: [idHospit])
-  typeMvt    String     @map("type_mvt") // ENTREE, SORTIE
-  qte        Float
-  dateMvt    DateTime  @default(now()) @map("date_mvt")
+
+  typeMvt String   @map("type_mvt")
+  qte     Float
+  dateMvt DateTime @default(now()) @map("date_mvt")
 
   @@map("mouvement_pharmacie")
 }
 
 model RendezVous {
-  idRdv      Int       @id @default(autoincrement()) @map("id_rdv")
-  patientId  Int       @map("patient_id")
-  patient    Patient   @relation(fields: [patientId], references: [id_patient])
-  medecinId  Int?      @map("medecin_id")
-  medecin    Utilisateur? @relation("MedecinRendezVous", fields: [medecinId], references: [idUser])
-  serviceId  Int?      @map("service_id")
-  service    Service?  @relation(fields: [serviceId], references: [idService])
-  dateRdv    DateTime  @map("date_rdv")
-  statut     String?   @default("planifie")
+  idRdv Int @id @default(autoincrement()) @map("id_rdv")
+
+  patientId Int     @map("patient_id")
+  patient   Patient @relation(fields: [patientId], references: [id_patient])
+
+  medecinId Int?         @map("medecin_id")
+  medecin   Utilisateur? @relation("MedecinRendezVous", fields: [medecinId], references: [idUser])
+
+  serviceId Int?     @map("service_id")
+  service   Service? @relation(fields: [serviceId], references: [idService])
+
+  dateRdv DateTime @map("date_rdv")
+  statut  String?  @default("planifie")
 
   @@map("rendez_vous")
 }
 
 model LogAudit {
-  idLog         Int      @id @default(autoincrement()) @map("id_log")
-  dateAction    DateTime @default(now()) @map("date_action")
-  utilisateurId Int?     @map("utilisateur_id")
+  idLog      Int      @id @default(autoincrement()) @map("id_log")
+  dateAction DateTime @default(now()) @map("date_action")
+
+  utilisateurId Int?         @map("utilisateur_id")
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [idUser])
-  tableImpactee String   @map("table_impactee")
-  typeAction    String   @map("type_action")
+
+  tableImpactee String  @map("table_impactee")
+  typeAction    String  @map("type_action")
   details       String?
 
   @@map("log_audit")
 }
 
-// Modèles pour NextAuth (Optionnels si tu utilises Utilisateur pour tout)
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  password      String?
-  image         String?
-  role          String    @default("USER")
-  accounts      Account[]
-  sessions      Session[]
+  id       String  @id @default(cuid())
+  name     String?
+  email    String? @unique
+  password String?
+  image    String?
+  role     String  @default("USER")
+
+  accounts Account[]
+  sessions Session[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+
+  refresh_token String? @db.Text
+  access_token  String? @db.Text
+  expires_at    Int?
+  token_type    String?
+  scope         String?
+  id_token      String? @db.Text
+  session_state String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -267,5 +385,46 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActeMedical {
+  idActe Int @id @default(autoincrement()) @map("id_acte")
+
+  libelle      String
+  cotation     String?
+  quantiteBase Float?  @default(1) @map("quantite_base")
+  prixUnitaire Float   @default(0) @map("prix_unitaire")
+  valeur       Float   @default(0)
+
+  categorie String // ACTES_MEDICAUX, ANALYSES_BIOLOGIQUES, RADIOLOGIE...
+  forfait   Boolean @default(false)
+  etat      String  @default("actif") // actif, inactif
+
+  lignesFacture LigneFacture[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("acte_medical")
+}
+
+model LigneFacture {
+  idLigne Int @id @default(autoincrement()) @map("id_ligne")
+
+  factureId Int     @map("facture_id")
+  facture   Facture @relation(fields: [factureId], references: [idFacture])
+
+  acteId Int?         @map("acte_id")
+  acte   ActeMedical? @relation(fields: [acteId], references: [idActe])
+
+  designation  String
+  quantite     Float  @default(1)
+  prixUnitaire Float  @map("prix_unitaire")
+  montant      Float
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("ligne_facture")
 }

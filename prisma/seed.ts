@@ -36,6 +36,27 @@ async function main() {
   });
 
   console.log('✅ Admin prêt :', admin.login);
+
+  const compagnies = [
+  'ASCOMA',
+  'NSIA ASSURANCES',
+  'MUGEF-CI',
+  'SANLAM',
+  'SUNU',
+  'ALLIANZ',
+  'AXA',
+  'GNA ASSURANCES',
+];
+
+for (const nomCompagnie of compagnies) {
+  await prisma.compagnieAssurance.upsert({
+    where: { nomCompagnie },
+    update: {},
+    create: { nomCompagnie },
+  });
+}
+
+console.log('✅ Compagnies assurances prêtes');
 }
 
 main()

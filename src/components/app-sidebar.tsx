@@ -2,14 +2,101 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Stethoscope, Calendar, CreditCard, Building2 } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Stethoscope,
+  Calendar,
+  CreditCard,
+  ShieldCheck,
+  ClipboardList,
+  Wallet,
+  BedDouble,
+  FlaskConical,
+  Pill,
+  BarChart3,
+  Settings,
+  Building2,
+} from 'lucide-react';
 
 const navLinks = [
-  { title: 'Tableau de bord', icon: LayoutDashboard, href: '/dashboard' },
-  { title: 'Patients', icon: Users, href: '/patients' },
-  { title: 'Consultations', icon: Stethoscope, href: '/consultations' },
-  { title: 'Rendez-vous', icon: Calendar, href: '/rendezvous' },
-  { title: 'Facturation', icon: CreditCard, href: '/factures' },
+  {
+    title: 'Tableau de bord',
+    icon: LayoutDashboard,
+    href: '/dashboard',
+  },
+
+  {
+    title: 'Patients',
+    icon: Users,
+    href: '/patients',
+  },
+
+  {
+    title: 'Assurances',
+    icon: ShieldCheck,
+    href: '/assurances',
+  },
+
+  {
+    title: 'Actes Médicaux',
+    icon: ClipboardList,
+    href: '/actes',
+  },
+
+  {
+    title: 'Consultations',
+    icon: Stethoscope,
+    href: '/consultations',
+  },
+
+  {
+    title: 'Rendez-vous',
+    icon: Calendar,
+    href: '/rendezvous',
+  },
+
+  {
+    title: 'Facturation',
+    icon: CreditCard,
+    href: '/factures',
+  },
+
+  {
+    title: 'Paiements',
+    icon: Wallet,
+    href: '/paiements',
+  },
+
+  {
+    title: 'Hospitalisations',
+    icon: BedDouble,
+    href: '/hospitalisations',
+  },
+
+  {
+    title: 'Laboratoire',
+    icon: FlaskConical,
+    href: '/laboratoire',
+  },
+
+  {
+    title: 'Pharmacie',
+    icon: Pill,
+    href: '/pharmacie',
+  },
+
+  {
+    title: 'Rapports',
+    icon: BarChart3,
+    href: '/rapports',
+  },
+
+  {
+    title: 'Paramètres',
+    icon: Settings,
+    href: '/parametres',
+  },
 ];
 
 export default function AppSidebar() {

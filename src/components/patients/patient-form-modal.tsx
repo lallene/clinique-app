@@ -3,9 +3,16 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Phone, ShieldCheck, User, X } from 'lucide-react';
 
-type Compagnie = {
-  idCompagnie: number;
-  nomCompagnie: string;
+type Assurance = {
+  idAssurance: number;
+  compagnieId: number;
+  nomGarant: string;
+  tauxCouverture: number;
+  statut: string;
+  compagnie?: {
+    idCompagnie: number;
+    nomCompagnie: string;
+  } | null;
 };
 
 type Patient = {
@@ -25,8 +32,10 @@ type Patient = {
   tauxCouverture?: number | null;
   matriculeAssure?: string | null;
   assurance?: {
+    idAssurance?: number;
     compagnieId?: number | null;
     nomGarant?: string | null;
+    tauxCouverture?: number | null;
     compagnie?: {
       idCompagnie?: number;
       nomCompagnie?: string | null;
@@ -41,27 +50,73 @@ type PatientFormModalProps = {
   onCreated: () => void | Promise<void>;
 };
 
+function formatDateForInput(date?: string | null) {
+  if (!date) return '';
+  return new Date(date).toISOString().split('T')[0];
+}
+
+function calculateAge(date: string) {
+  if (!date) return '';
+
+  const birthDate = new Date(date);
+  const today = new Date();
+
+  let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    calculatedAge--;
+  }
+
+  return calculatedAge >= 0 ? String(calculatedAge) : '';
+}
+
 export default function PatientFormModal({
   open,
   patient,
   onClose,
   onCreated,
 }: PatientFormModalProps) {
-  const [nom, setNom] = useState('');
-  const [prenoms, setPrenoms] = useState('');
-  const [sexe, setSexe] = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [quartier, setQuartier] = useState('');
-  const [age, setAge] = useState('');
-  const [dateNaissance, setDateNaissance] = useState('');
-  const [personneContact, setPersonneContact] = useState('');
+  const initialIsAssure = Boolean(patient?.isAssure || patient?.assuranceId);
 
-  const [isAssure, setIsAssure] = useState(false);
-  const [compagnies, setCompagnies] = useState<Compagnie[]>([]);
-  const [selectedCompagnieId, setSelectedCompagnieId] = useState('');
-  const [nomGarant, setNomGarant] = useState('');
-  const [tauxCouverture, setTauxCouverture] = useState('100');
-  const [matriculeAssure, setMatriculeAssure] = useState('');
+  const [nom, setNom] = useState(patient?.nom || '');
+  const [prenoms, setPrenoms] = useState(patient?.prenoms || '');
+  const [sexe, setSexe] = useState(patient?.sexe || '');
+  const [telephone, setTelephone] = useState(patient?.telephone || '');
+  const [quartier, setQuartier] = useState(patient?.quartier || '');
+  const [age, setAge] = useState(patient?.age ? String(patient.age) : '');
+  const [dateNaissance, setDateNaissance] = useState(
+    formatDateForInput(patient?.dateNaissance),
+  );
+  const [personneContact, setPersonneContact] = useState(
+    patient?.personneContact || '',
+  );
+
+  const [isAssure, setIsAssure] = useState(initialIsAssure);
+  const [assurances, setAssurances] = useState<Assurance[]>([]);
+
+  const [selectedAssuranceId, setSelectedAssuranceId] = useState(
+    initialIsAssure && patient?.assuranceId ? String(patient.assuranceId) : '',
+  );
+
+  const [nomGarant, setNomGarant] = useState(
+    initialIsAssure ? patient?.assurance?.nomGarant || '' : '',
+  );
+
+  const [tauxCouverture, setTauxCouverture] = useState(
+    initialIsAssure &&
+      patient?.tauxCouverture !== null &&
+      patient?.tauxCouverture !== undefined
+      ? String(patient.tauxCouverture)
+      : '100',
+  );
+
+  const [matriculeAssure, setMatriculeAssure] = useState(
+    initialIsAssure ? patient?.matriculeAssure || '' : '',
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -74,98 +129,55 @@ export default function PatientFormModal({
 
     const controller = new AbortController();
 
-    async function fetchCompagnies() {
+    async function fetchAssurances() {
       try {
         setError('');
 
-        const res = await fetch('/api/compagnies', {
+        const res = await fetch('/api/assurances', {
           signal: controller.signal,
         });
 
         if (!res.ok) {
-          throw new Error("Échec du chargement des compagnies d'assurance.");
+          throw new Error("Échec du chargement des conventions d'assurance.");
         }
 
         const data = await res.json();
-        setCompagnies(data);
+
+        setAssurances(
+          Array.isArray(data)
+            ? data.filter((assurance: Assurance) => assurance.statut === 'active')
+            : [],
+        );
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         setError(err instanceof Error ? err.message : 'Erreur inconnue');
       }
     }
 
-    fetchCompagnies();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAssurances();
 
     return () => controller.abort();
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
+  if (!open) return null;
 
-    if (!patient) {
-      resetForm();
+  function handleAssuranceChange(value: string) {
+    setSelectedAssuranceId(value);
+
+    const assurance = assurances.find(
+      (item) => String(item.idAssurance) === value,
+    );
+
+    if (!assurance) {
+      setNomGarant('');
+      setTauxCouverture('100');
       return;
     }
 
-    setNom(patient.nom || '');
-    setPrenoms(patient.prenoms || '');
-    setSexe(patient.sexe || '');
-    setTelephone(patient.telephone || '');
-    setQuartier(patient.quartier || '');
-    setPersonneContact(patient.personneContact || '');
-
-    setDateNaissance(
-      patient.dateNaissance ? new Date(patient.dateNaissance).toISOString().split('T')[0] : '',
-    );
-
-    setAge(patient.age ? String(patient.age) : '');
-
-    const patientIsAssure = Boolean(patient.isAssure || patient.assuranceId);
-    setIsAssure(patientIsAssure);
-
-    if (patientIsAssure) {
-      setNomGarant(patient.assurance?.nomGarant || '');
-
-      setSelectedCompagnieId(
-        patient.assurance?.compagnieId
-          ? String(patient.assurance.compagnieId)
-          : patient.assurance?.compagnie?.idCompagnie
-            ? String(patient.assurance.compagnie.idCompagnie)
-            : '',
-      );
-
-      setTauxCouverture(
-        patient.tauxCouverture !== null && patient.tauxCouverture !== undefined
-          ? String(patient.tauxCouverture)
-          : '100',
-      );
-
-      setMatriculeAssure(patient.matriculeAssure || '');
-    } else {
-      setNomGarant('');
-      setSelectedCompagnieId('');
-      setTauxCouverture('100');
-      setMatriculeAssure('');
-    }
-  }, [open, patient]);
-
-  useEffect(() => {
-    if (!dateNaissance) return;
-
-    const birthDate = new Date(dateNaissance);
-    const today = new Date();
-
-    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      calculatedAge--;
-    }
-
-    setAge(calculatedAge.toString());
-  }, [dateNaissance]);
-
-  if (!open) return null;
+    setNomGarant(assurance.nomGarant || 'PARTICULIER');
+    setTauxCouverture(String(assurance.tauxCouverture ?? 0));
+  }
 
   function resetForm() {
     setNom('');
@@ -177,7 +189,7 @@ export default function PatientFormModal({
     setAge('');
     setPersonneContact('');
     setIsAssure(false);
-    setSelectedCompagnieId('');
+    setSelectedAssuranceId('');
     setNomGarant('');
     setTauxCouverture('100');
     setMatriculeAssure('');
@@ -201,27 +213,44 @@ export default function PatientFormModal({
       return;
     }
 
+    if (isAssure && !selectedAssuranceId) {
+      setError("Veuillez sélectionner une convention d'assurance.");
+      setSubmitting(false);
+      return;
+    }
+
+    const taux = Number(tauxCouverture);
+
+    if (isAssure && (Number.isNaN(taux) || taux < 0 || taux > 100)) {
+      setError('Le taux de couverture doit être compris entre 0 et 100.');
+      setSubmitting(false);
+      return;
+    }
+
     const patientId = patient?.idPatient ?? patient?.id_patient;
 
     const payload = {
       idPatient: patientId,
-      nom: nom.toUpperCase(),
-      prenoms,
+      nom: nom.trim().toUpperCase(),
+      prenoms: prenoms.trim(),
       sexe,
-      telephone,
-      quartier,
+      telephone: telephone.trim(),
+      quartier: quartier.trim(),
       dateNaissance: dateNaissance || null,
       age: age ? Number(age) : null,
-      personneContact,
+      personneContact: personneContact.trim(),
+
       isAssure,
+      assuranceId: isAssure ? Number(selectedAssuranceId) : null,
+      tauxCouverture: isAssure ? taux : 0,
+      matriculeAssure: isAssure ? matriculeAssure.trim() : null,
+
       assuranceData: isAssure
         ? {
-            compagnieId: Number(selectedCompagnieId),
-            nomGarant: nomGarant.toUpperCase() || 'PARTICULIER',
-            tauxCouverture: Number(tauxCouverture),
-            matriculeAssure,
-            contact: null,
-            convention: null,
+            assuranceId: Number(selectedAssuranceId),
+            nomGarant: nomGarant.trim().toUpperCase() || 'PARTICULIER',
+            tauxCouverture: taux,
+            matriculeAssure: matriculeAssure.trim(),
           }
         : null,
     };
@@ -238,16 +267,6 @@ export default function PatientFormModal({
       if (!response.ok) {
         throw new Error(data.error || "Erreur lors de l'enregistrement.");
       }
-
-      alert(
-        isEditMode
-          ? `✅ Patient modifié avec succès\n\nNom : ${data.nom}\nPrénoms : ${
-              data.prenoms || '-'
-            }\nN° dossier : ${data.numeroDossier || '-'}`
-          : `✅ Patient bien enregistré\n\nNom : ${data.nom}\nPrénoms : ${
-              data.prenoms || '-'
-            }\nN° dossier : ${data.numeroDossier || '-'}`,
-      );
 
       resetForm();
       await onCreated();
@@ -277,6 +296,7 @@ export default function PatientFormModal({
             type="button"
             onClick={onClose}
             aria-label="Fermer la fenêtre"
+            title="Fermer"
             className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-50"
           >
             <X size={24} />
@@ -305,7 +325,7 @@ export default function PatientFormModal({
                   required
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500 focus:bg-white"
                   placeholder="ACHI"
                 />
               </div>
@@ -321,7 +341,7 @@ export default function PatientFormModal({
                   id="prenoms"
                   value={prenoms}
                   onChange={(e) => setPrenoms(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none transition-all focus:border-emerald-500 focus:bg-white"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500 focus:bg-white"
                   placeholder="Lallène Cédric"
                 />
               </div>
@@ -358,7 +378,11 @@ export default function PatientFormModal({
                   id="dateNaissance"
                   type="date"
                   value={dateNaissance}
-                  onChange={(e) => setDateNaissance(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setDateNaissance(value);
+                    setAge(calculateAge(value));
+                  }}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500"
                 />
               </div>
@@ -456,13 +480,17 @@ export default function PatientFormModal({
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className={`rounded-xl p-2 ${isAssure ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}
+                  className={`rounded-xl p-2 ${
+                    isAssure ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'
+                  }`}
                 >
                   <ShieldCheck size={20} />
                 </div>
 
                 <div>
-                  <span className="block text-sm font-black text-slate-800">Prise en charge</span>
+                  <span className="block text-sm font-black text-slate-800">
+                    Prise en charge
+                  </span>
                   <span className="block text-[10px] font-bold uppercase tracking-tighter text-slate-400 italic">
                     Patient assuré ?
                   </span>
@@ -483,25 +511,27 @@ export default function PatientFormModal({
             </div>
 
             {isAssure && (
-              <div className="grid gap-4 duration-500 animate-in fade-in slide-in-from-top-2 md:grid-cols-2">
-                <div className="space-y-1.5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1.5 md:col-span-2">
                   <label
-                    htmlFor="compagnie"
+                    htmlFor="assurance"
                     className="ml-1 text-[10px] font-black uppercase text-blue-600"
                   >
-                    Compagnie d&apos;assurance
+                    Convention assurance *
                   </label>
                   <select
-                    id="compagnie"
+                    id="assurance"
                     required={isAssure}
-                    value={selectedCompagnieId}
-                    onChange={(e) => setSelectedCompagnieId(e.target.value)}
+                    value={selectedAssuranceId}
+                    onChange={(e) => handleAssuranceChange(e.target.value)}
                     className="w-full rounded-xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
-                    <option value="">-- Choisir Compagnie --</option>
-                    {compagnies.map((compagnie) => (
-                      <option key={compagnie.idCompagnie} value={compagnie.idCompagnie}>
-                        {compagnie.nomCompagnie}
+                    <option value="">-- Choisir convention --</option>
+
+                    {assurances.map((assurance) => (
+                      <option key={assurance.idAssurance} value={assurance.idAssurance}>
+                        {assurance.compagnie?.nomCompagnie || 'ASSURANCE'} -{' '}
+                        {assurance.nomGarant} - {assurance.tauxCouverture}%
                       </option>
                     ))}
                   </select>
@@ -517,25 +547,9 @@ export default function PatientFormModal({
                   <input
                     id="nomGarant"
                     value={nomGarant}
-                    onChange={(e) => setNomGarant(e.target.value)}
-                    className="w-full rounded-xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="Ex: CONCENTRIX, SÉNAT..."
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="matriculeAssure"
-                    className="ml-1 text-[10px] font-black uppercase text-blue-600"
-                  >
-                    N° Matricule assuré
-                  </label>
-                  <input
-                    id="matriculeAssure"
-                    value={matriculeAssure}
-                    onChange={(e) => setMatriculeAssure(e.target.value)}
-                    className="w-full rounded-xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="Numéro de carte..."
+                    readOnly
+                    className="w-full cursor-not-allowed rounded-xl border border-blue-100 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700 outline-none"
+                    placeholder="Automatique"
                   />
                 </div>
 
@@ -550,8 +564,24 @@ export default function PatientFormModal({
                     id="tauxCouverture"
                     type="number"
                     value={tauxCouverture}
-                    onChange={(e) => setTauxCouverture(e.target.value)}
+                    readOnly
+                    className="w-full cursor-not-allowed rounded-xl border border-blue-100 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700 outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                  <label
+                    htmlFor="matriculeAssure"
+                    className="ml-1 text-[10px] font-black uppercase text-blue-600"
+                  >
+                    N° Matricule assuré
+                  </label>
+                  <input
+                    id="matriculeAssure"
+                    value={matriculeAssure}
+                    onChange={(e) => setMatriculeAssure(e.target.value)}
                     className="w-full rounded-xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/20"
+                    placeholder="Numéro de carte..."
                   />
                 </div>
               </div>
@@ -559,7 +589,7 @@ export default function PatientFormModal({
           </div>
 
           {error && (
-            <div className="animate-pulse rounded-2xl border border-red-100 bg-red-50 p-4 text-xs font-bold text-red-600">
+            <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-xs font-bold text-red-600">
               ⚠️ {error}
             </div>
           )}
