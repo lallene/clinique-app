@@ -46,40 +46,11 @@ const navLinks = [
   },
 
   {
-    title: 'Consultations',
-    icon: Stethoscope,
-    href: '/consultations',
-  },
-
-  {
-    title: 'Rendez-vous',
-    icon: Calendar,
-    href: '/rendezvous',
-  },
-
-  {
     title: 'Facturation',
     icon: CreditCard,
     href: '/factures',
   },
 
-  {
-    title: 'Paiements',
-    icon: Wallet,
-    href: '/paiements',
-  },
-
-  {
-    title: 'Hospitalisations',
-    icon: BedDouble,
-    href: '/hospitalisations',
-  },
-
-  {
-    title: 'Laboratoire',
-    icon: FlaskConical,
-    href: '/laboratoire',
-  },
 
   {
     title: 'Pharmacie',

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "postinstall": "prisma generate",
+  "seed:pharmacie": "tsx prisma/seed-pharmacie.ts",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

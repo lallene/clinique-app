@@ -258,39 +258,6 @@ model Paiement {
   @@map("paiement")
 }
 
-model ProduitPharmacie {
-  idProduit     Int     @id @default(autoincrement()) @map("id_produit")
-  codeProduit   String? @unique @map("code_produit")
-  nomProduit    String  @map("nom_produit")
-  forme         String?
-  prixAchat     Float   @map("prix_achat")
-  prixVente     Float   @map("prix_vente")
-  quantiteStock Int     @default(0) @map("quantite_stock")
-
-  mvtPharmacie MvtPharmacie[]
-
-  @@map("produit_pharmacie")
-}
-
-model MvtPharmacie {
-  idMvt Int @id @default(autoincrement()) @map("id_mvt")
-
-  produitId Int              @map("produit_id")
-  produit   ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
-
-  patientId Int?     @map("patient_id")
-  patient   Patient? @relation(fields: [patientId], references: [id_patient])
-
-  hospitId        Int?             @map("hospit_id")
-  hospitalisation Hospitalisation? @relation(fields: [hospitId], references: [idHospit])
-
-  typeMvt String   @map("type_mvt")
-  qte     Float
-  dateMvt DateTime @default(now()) @map("date_mvt")
-
-  @@map("mouvement_pharmacie")
-}
-
 model RendezVous {
   idRdv Int @id @default(autoincrement()) @map("id_rdv")
 
@@ -453,4 +420,53 @@ model ConsultationMotif {
 
   @@id([consultationId, motifId])
   @@map("consultation_motif")
+}
+
+model ProduitPharmacie {
+  idProduit   Int     @id @default(autoincrement()) @map("id_produit")
+  codeProduit String? @unique @map("code_produit")
+  nomProduit  String  @map("nom_produit")
+
+  categorie String? // ANTIBIOTIQUE, ANTALGIQUE, PERFUSION...
+  forme     String? // COMPRIME, SIROP, INJECTABLE...
+  dosage    String? // 500mg, 1g, 250ml...
+  unite     String? // boîte, flacon, plaquette, ampoule
+
+  prixAchat Float @default(0) @map("prix_achat")
+  prixVente Float @default(0) @map("prix_vente")
+
+  quantiteStock Int @default(0) @map("quantite_stock")
+  seuilAlerte   Int @default(5) @map("seuil_alerte")
+
+  dateExpiration DateTime? @map("date_expiration")
+  fournisseur    String?
+
+  actif Boolean @default(true)
+
+  mvtPharmacie MvtPharmacie[]
+
+  @@map("produit_pharmacie")
+}
+
+model MvtPharmacie {
+  idMvt Int @id @default(autoincrement()) @map("id_mvt")
+
+  produitId Int              @map("produit_id")
+  produit   ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
+
+  patientId Int?     @map("patient_id")
+  patient   Patient? @relation(fields: [patientId], references: [id_patient])
+
+  hospitId        Int?             @map("hospit_id")
+  hospitalisation Hospitalisation? @relation(fields: [hospitId], references: [idHospit])
+
+  typeMvt String @map("type_mvt") // ENTREE, SORTIE, AJUSTEMENT
+
+  qte       Float
+  motif     String?
+  reference String?
+
+  dateMvt DateTime @default(now()) @map("date_mvt")
+
+  @@map("mouvement_pharmacie")
 }
