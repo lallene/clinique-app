@@ -64,17 +64,6 @@ const navLinks = [
     href: '/pharmacie',
   },
 
-  {
-    title: 'Rapports',
-    icon: BarChart3,
-    href: '/rapports',
-  },
-
-  {
-    title: 'Paramètres',
-    icon: Settings,
-    href: '/parametres',
-  },
   { title: 'Motifs', 
     icon: ListChecks, 
     href: '/motifs' 

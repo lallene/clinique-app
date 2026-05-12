@@ -4,14 +4,21 @@
   "private": true,
   "type": "module",
   "postinstall": "prisma generate",
-  "seed:pharmacie": "tsx prisma/seed-pharmacie.ts",
+ 
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed:pharmacie": "tsx prisma/seed-pharmacie.ts",
+    "seed:motifs": "tsx prisma/seed-motifs.ts",
+    "seed:antecedents": "tsx prisma/seed-antecedents.ts",
+    "seed:assurances": "tsx prisma/seed-assurances.ts",
+    "seed:patients": "tsx prisma/seed-patients.ts",
+    "seed:factures": "tsx prisma/seed-factures.ts",
+    "seed:consultations": "tsx prisma/seed-consultations.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
