@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+
 import AppHeader from '@/components/app-header';
 import PatientsPageClient from '@/components/patients/patients-page-client';
 
@@ -21,7 +22,13 @@ export default async function PatientsPage() {
       />
 
       <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
-        <PatientsPageClient />
+        <PatientsPageClient
+          currentUser={{
+            name: session.user?.name ?? '',
+            email: session.user?.email ?? '',
+            role: session.user?.role ?? 'USER',
+          }}
+        />
       </main>
     </>
   );
