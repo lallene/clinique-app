@@ -371,17 +371,71 @@ model LigneFacture {
   @@map("ligne_facture")
 }
 
+model ProduitPharmacie {
+  idProduit   Int     @id @default(autoincrement()) @map("id_produit")
+  codeProduit String? @unique @map("code_produit")
+  nomProduit  String  @map("nom_produit")
+
+  categorie String? // ANTIBIOTIQUE, ANTALGIQUE, PERFUSION...
+  forme     String? // COMPRIME, SIROP, INJECTABLE...
+  dosage    String? // 500mg, 1g, 250ml...
+  unite     String? // boîte, flacon, plaquette, ampoule
+
+  prixAchat Float @default(0) @map("prix_achat")
+  prixVente Float @default(0) @map("prix_vente")
+
+  quantiteStock Int @default(0) @map("quantite_stock")
+  seuilAlerte   Int @default(5) @map("seuil_alerte")
+
+  dateExpiration DateTime? @map("date_expiration")
+  fournisseur    String?
+
+  actif Boolean @default(true)
+
+  mvtPharmacie MvtPharmacie[]
+
+  lignesPrescription LignePrescription[]
+
+  @@map("produit_pharmacie")
+}
+
+model MvtPharmacie {
+  idMvt Int @id @default(autoincrement()) @map("id_mvt")
+
+  produitId Int              @map("produit_id")
+  produit   ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
+
+  patientId Int?     @map("patient_id")
+  patient   Patient? @relation(fields: [patientId], references: [id_patient])
+
+  hospitId        Int?             @map("hospit_id")
+  hospitalisation Hospitalisation? @relation(fields: [hospitId], references: [idHospit])
+
+  typeMvt String @map("type_mvt") // ENTREE, SORTIE, AJUSTEMENT
+
+  qte       Float
+  motif     String?
+  reference String?
+
+  dateMvt DateTime @default(now()) @map("date_mvt")
+
+  @@map("mouvement_pharmacie")
+}
+
 model Consultation {
   idConsultation   Int      @id @default(autoincrement()) @map("id_consultation")
   dateConsultation DateTime @default(now()) @map("date_consultation")
 
-  motifs       ConsultationMotif[]
-  motifLibre   String?             @map("motif_libre")
-  antecedents  String?
-  constantes   String?
-  diagnostic   String?
-  prescription String?
-  compteRendu  String?             @map("compte_rendu")
+  motifs      ConsultationMotif[]
+  motifLibre  String?             @map("motif_libre")
+  constantes  String?
+  diagnostic  String?
+  compteRendu String?             @map("compte_rendu")
+
+  prescriptions Prescription[]
+
+  antecedentsMedicaux ConsultationAntecedent[]
+  antecedentLibre     String?                  @map("antecedent_libre")
 
   patientId Int     @map("patient_id")
   patient   Patient @relation(fields: [patientId], references: [id_patient])
@@ -422,51 +476,61 @@ model ConsultationMotif {
   @@map("consultation_motif")
 }
 
-model ProduitPharmacie {
-  idProduit   Int     @id @default(autoincrement()) @map("id_produit")
-  codeProduit String? @unique @map("code_produit")
-  nomProduit  String  @map("nom_produit")
+model AntecedentMedical {
+  idAntecedent Int     @id @default(autoincrement()) @map("id_antecedent")
+  libelle      String  @unique
+  categorie    String?
+  actif        Boolean @default(true)
 
-  categorie String? // ANTIBIOTIQUE, ANTALGIQUE, PERFUSION...
-  forme     String? // COMPRIME, SIROP, INJECTABLE...
-  dosage    String? // 500mg, 1g, 250ml...
-  unite     String? // boîte, flacon, plaquette, ampoule
+  consultations ConsultationAntecedent[]
 
-  prixAchat Float @default(0) @map("prix_achat")
-  prixVente Float @default(0) @map("prix_vente")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  quantiteStock Int @default(0) @map("quantite_stock")
-  seuilAlerte   Int @default(5) @map("seuil_alerte")
-
-  dateExpiration DateTime? @map("date_expiration")
-  fournisseur    String?
-
-  actif Boolean @default(true)
-
-  mvtPharmacie MvtPharmacie[]
-
-  @@map("produit_pharmacie")
+  @@map("antecedent_medical")
 }
 
-model MvtPharmacie {
-  idMvt Int @id @default(autoincrement()) @map("id_mvt")
+model ConsultationAntecedent {
+  consultationId Int @map("consultation_id")
+  antecedentId   Int @map("antecedent_id")
 
-  produitId Int              @map("produit_id")
-  produit   ProduitPharmacie @relation(fields: [produitId], references: [idProduit])
+  consultation Consultation      @relation(fields: [consultationId], references: [idConsultation], onDelete: Cascade)
+  antecedent   AntecedentMedical @relation(fields: [antecedentId], references: [idAntecedent])
 
-  patientId Int?     @map("patient_id")
-  patient   Patient? @relation(fields: [patientId], references: [id_patient])
+  @@id([consultationId, antecedentId])
+  @@map("consultation_antecedent")
+}
 
-  hospitId        Int?             @map("hospit_id")
-  hospitalisation Hospitalisation? @relation(fields: [hospitId], references: [idHospit])
+model Prescription {
+  idPrescription Int @id @default(autoincrement()) @map("id_prescription")
 
-  typeMvt String @map("type_mvt") // ENTREE, SORTIE, AJUSTEMENT
+  consultationId Int          @map("consultation_id")
+  consultation   Consultation @relation(fields: [consultationId], references: [idConsultation], onDelete: Cascade)
 
-  qte       Float
-  motif     String?
-  reference String?
+  datePrescription DateTime @default(now()) @map("date_prescription")
+  statut           String   @default("en_attente") // en_attente, servie, partielle, annulee
 
-  dateMvt DateTime @default(now()) @map("date_mvt")
+  lignes LignePrescription[]
 
-  @@map("mouvement_pharmacie")
+  @@map("prescription")
+}
+
+model LignePrescription {
+  idLignePrescription Int @id @default(autoincrement()) @map("id_ligne_prescription")
+
+  prescriptionId Int          @map("prescription_id")
+  prescription   Prescription @relation(fields: [prescriptionId], references: [idPrescription], onDelete: Cascade)
+
+  produitId Int?              @map("produit_id")
+  produit   ProduitPharmacie? @relation(fields: [produitId], references: [idProduit])
+
+  medicamentLibre String? @map("medicament_libre")
+  posologie       String?
+  quantite        Float   @default(1)
+  duree           String?
+  statut          String  @default("en_attente") // en_attente, servi, rupture
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("ligne_prescription")
 }

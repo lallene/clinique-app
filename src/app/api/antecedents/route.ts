@@ -3,13 +3,15 @@ import { prisma } from '@/lib/prisma';
 
 function clean(value: unknown) {
   if (typeof value !== 'string') return null;
+
   const trimmed = value.trim();
+
   return trimmed.length > 0 ? trimmed : null;
 }
 
 export async function GET() {
   try {
-    const motifs = await prisma.motifConsultation.findMany({
+    const antecedents = await prisma.antecedentMedical.findMany({
       orderBy: {
         libelle: 'asc',
       },
@@ -22,12 +24,12 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(motifs);
+    return NextResponse.json(antecedents);
   } catch (error) {
-    console.error('Erreur GET /api/motifs:', error);
+    console.error('Erreur GET /api/antecedents:', error);
 
     return NextResponse.json(
-      { error: 'Erreur chargement motifs.' },
+      { error: 'Erreur chargement antécédents.' },
       { status: 500 },
     );
   }
@@ -39,6 +41,7 @@ export async function POST(req: Request) {
 
     const libelle = clean(body.libelle);
     const categorie = clean(body.categorie);
+
     
 
     if (!libelle) {
@@ -48,20 +51,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const existingMotif = await prisma.motifConsultation.findFirst({
-      where: {
-        libelle: libelle.toUpperCase(),
-      },
-    });
+      const existingAntecedent = await prisma.antecedentMedical.findFirst({
+        where: {
+          libelle: libelle.toUpperCase(),
+        },
+      });
 
-    if (existingMotif) {
-      return NextResponse.json(
-        { error: 'Ce motif existe déjà dans la base.' },
-        { status: 400 },
-      );
-    }
+      if (existingAntecedent) {
+        return NextResponse.json(
+          { error: 'Cet antécédent existe déjà dans la base.' },
+          { status: 400 },
+        );
+      }
 
-    const motif = await prisma.motifConsultation.create({
+    const antecedent = await prisma.antecedentMedical.create({
       data: {
         libelle: libelle.toUpperCase(),
         categorie: categorie ? categorie.toUpperCase() : null,
@@ -69,12 +72,12 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(motif, { status: 201 });
+    return NextResponse.json(antecedent, { status: 201 });
   } catch (error) {
-    console.error('Erreur POST /api/motifs:', error);
+    console.error('Erreur POST /api/antecedents:', error);
 
     return NextResponse.json(
-      { error: 'Erreur création motif. Vérifie s’il existe déjà.' },
+      { error: 'Erreur création antécédent. Vérifie s’il existe déjà.' },
       { status: 500 },
     );
   }
@@ -84,13 +87,13 @@ export async function PUT(req: Request) {
   try {
     const body = await req.json();
 
-    const idMotif = Number(body.idMotif);
+    const idAntecedent = Number(body.idAntecedent);
     const libelle = clean(body.libelle);
     const categorie = clean(body.categorie);
 
-    if (!idMotif || Number.isNaN(idMotif)) {
+    if (!idAntecedent || Number.isNaN(idAntecedent)) {
       return NextResponse.json(
-        { error: 'ID motif invalide.' },
+        { error: 'ID antécédent invalide.' },
         { status: 400 },
       );
     }
@@ -102,11 +105,9 @@ export async function PUT(req: Request) {
       );
     }
 
-    
-
-    const motif = await prisma.motifConsultation.update({
+    const antecedent = await prisma.antecedentMedical.update({
       where: {
-        idMotif,
+        idAntecedent,
       },
       data: {
         libelle: libelle.toUpperCase(),
@@ -115,12 +116,12 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json(motif);
+    return NextResponse.json(antecedent);
   } catch (error) {
-    console.error('Erreur PUT /api/motifs:', error);
+    console.error('Erreur PUT /api/antecedents:', error);
 
     return NextResponse.json(
-      { error: 'Erreur modification motif.' },
+      { error: 'Erreur modification antécédent.' },
       { status: 500 },
     );
   }
@@ -130,18 +131,18 @@ export async function DELETE(req: Request) {
   try {
     const body = await req.json();
 
-    const idMotif = Number(body.idMotif);
+    const idAntecedent = Number(body.idAntecedent);
 
-    if (!idMotif || Number.isNaN(idMotif)) {
+    if (!idAntecedent || Number.isNaN(idAntecedent)) {
       return NextResponse.json(
-        { error: 'ID motif invalide.' },
+        { error: 'ID antécédent invalide.' },
         { status: 400 },
       );
     }
 
-    const usageCount = await prisma.consultationMotif.count({
+    const usageCount = await prisma.consultationAntecedent.count({
       where: {
-        motifId: idMotif,
+        antecedentId: idAntecedent,
       },
     });
 
@@ -149,24 +150,24 @@ export async function DELETE(req: Request) {
       return NextResponse.json(
         {
           error:
-            'Impossible de supprimer ce motif : il est déjà utilisé dans une consultation. Désactive-le plutôt.',
+            'Impossible de supprimer cet antécédent : il est déjà utilisé dans une consultation. Désactive-le plutôt.',
         },
         { status: 400 },
       );
     }
 
-    await prisma.motifConsultation.delete({
+    await prisma.antecedentMedical.delete({
       where: {
-        idMotif,
+        idAntecedent,
       },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Erreur DELETE /api/motifs:', error);
+    console.error('Erreur DELETE /api/antecedents:', error);
 
     return NextResponse.json(
-      { error: 'Erreur suppression motif.' },
+      { error: 'Erreur suppression antécédent.' },
       { status: 500 },
     );
   }
