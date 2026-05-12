@@ -1,9 +1,8 @@
 {
-  "name": "clinique-app",
+"name": "cmsaint-raphael",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "postinstall": "prisma generate",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
