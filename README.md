@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clinique App - Saint Raphaël
 
-## Getting Started
+Application web complète de gestion de clinique médicale.
 
-First, run the development server:
+## Fonctionnalités
+
+- Authentification sécurisée
+- Gestion des patients
+- Gestion des assurances et conventions
+- Gestion des actes médicaux
+- Facturation patient / assurance
+- Gestion des motifs de consultation
+- Gestion pharmacie
+- Gestion stock pharmacie
+- Mouvements de stock : entrée, sortie, ajustement
+- Déploiement Render
+- Base de données PostgreSQL avec Prisma
+
+## Stack technique
+
+- Next.js 16
+- React 19
+- TypeScript
+- Prisma 7
+- PostgreSQL / Neon
+- NextAuth / Auth.js
+- Tailwind CSS
+- Lucide React
+- Render
+
+## Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+git clone https://github.com/ton-compte/clinique-app.git
+cd clinique-app
+npm install
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Commandes Git
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Voir les fichiers modifiés : git status
+Ajouter les fichiers : git add .
+Créer un commit : git commit -m "feat: ajout modules clinique"
+Envoyer sur GitHub : git push origin main
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Déploiement Render
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Build Command : npm install && npx prisma generate && npm run build
+Start Command : npm start
+Variables Render
+    DATABASE_URL="postgresql://..."
+    AUTH_SECRET="votre_secret"
+    NEXTAUTH_SECRET="votre_secret"
+    AUTH_URL="https://cmsaint-raphael.onrender.com"
+    NEXTAUTH_URL="https://cmsaint-raphael.onrender.com"
+    AUTH_TRUST_HOST=true
 
-## Deploy on Vercel
+Déploiement production Prisma
+Après déploiement :  npx prisma migrate deploy
+ou si utilisation directe sans migrations : npx prisma db push
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Seeds
+
+Seed admin :  npm run seed
+Seed motifs : npx tsx prisma/seed-motifs.ts
+Seed pharmacie : npx tsx prisma/seed-pharmacie.ts
+
