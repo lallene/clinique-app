@@ -79,8 +79,6 @@ export async function POST(req: Request) {
       data: {
         consultationId,
         statut: 'en_attente',
-        commentaire: clean(body.commentaire),
-
         lignes: {
           create: lignes.map((ligne) => ({
             produitId: Number(ligne.produitId),
@@ -139,7 +137,6 @@ export async function PUT(req: Request) {
       },
       data: {
         statut: clean(body.statut) || undefined,
-        commentaire: clean(body.commentaire),
       },
       include: {
         lignes: {
